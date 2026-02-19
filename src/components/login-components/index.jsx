@@ -325,8 +325,8 @@ export default function RestaurantLogin() {
                     >Request an invitation</Link>
                   </div>
 
-                  {/* Security badge */}
                   <SecurityBadge t={t} isDark={isDark}/>
+                  
                 </form>
               </>
             )}
