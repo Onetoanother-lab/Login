@@ -141,7 +141,7 @@ export default function RestaurantLogin() {
           <div style={{ marginLeft:"auto" }}><ThemeDots/></div>
         </header>
       )}
-
+ 
       {/* Desktop: left panel */}
       <LeftPanel t={t} ready={ready} themeKey={themeKey}/>
 
