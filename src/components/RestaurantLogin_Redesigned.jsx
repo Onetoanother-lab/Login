@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────
@@ -401,19 +402,19 @@ const GLOBAL_CSS = `
   }
 
   /* ══════════════════════════════════════════════════════
-     CINEMATIC INTRO — 9-second luxury preloader v2
+     CINEMATIC INTRO — 15-second luxury preloader v3
      ══════════════════════════════════════════════════════ */
 
   /* ── Overlay lifecycle ── */
   @keyframes ci-bgReveal    { 0%{opacity:0;} 100%{opacity:1;} }
   @keyframes ci-overlayExit {
     0%   { opacity:1; transform:scale(1);     filter:blur(0px) brightness(1); }
-    30%  { opacity:1; transform:scale(1.008); filter:blur(0px) brightness(2.8); }
-    55%  { opacity:1; transform:scale(1.022); filter:blur(2px) brightness(1.6); }
-    100% { opacity:0; transform:scale(1.06);  filter:blur(18px) brightness(0.4); }
+    25%  { opacity:1; transform:scale(1.004); filter:blur(0px) brightness(3.2); }
+    55%  { opacity:1; transform:scale(1.02);  filter:blur(3px) brightness(1.8); }
+    100% { opacity:0; transform:scale(1.07);  filter:blur(22px) brightness(0.2); }
   }
 
-  /* ── Rising ember particles (restaurant candle ambiance) ── */
+  /* ── Particles ── */
   @keyframes ci-ember {
     0%   { transform:translate(0,0) scale(1); opacity:0; }
     6%   { opacity:var(--ci-op,.6); }
@@ -421,7 +422,6 @@ const GLOBAL_CSS = `
     90%  { opacity:0; }
     100% { transform:translate(var(--ci-wx2,-6px), var(--ci-ry,-180px)) scale(.15); opacity:0; }
   }
-  /* ── Orbital debris around mandala ── */
   @keyframes ci-debris {
     0%   { transform:translate(0,0) scale(1); opacity:0; }
     8%   { opacity:var(--ci-op,.4); }
@@ -435,7 +435,7 @@ const GLOBAL_CSS = `
   @keyframes ci-tickIn    { from{opacity:0;transform:scaleY(0) translateY(2px);} to{opacity:var(--ci-top,.2);transform:scaleY(1) translateY(0);} }
   @keyframes ci-diamondIn { from{opacity:0;transform:scale(0) rotate(-45deg);} to{opacity:.55;transform:scale(1) rotate(0deg);} }
 
-  /* ── Crest / logo mark ── */
+  /* ── Crest ── */
   @keyframes ci-crestDraw {
     from { stroke-dashoffset:220; opacity:0; filter:drop-shadow(0 0 0px rgba(201,168,76,0)); }
     30%  { opacity:1; }
@@ -445,15 +445,8 @@ const GLOBAL_CSS = `
     0%,100% { filter:drop-shadow(0 0 8px rgba(201,168,76,.5)) drop-shadow(0 0 20px rgba(201,168,76,.2)); }
     50%     { filter:drop-shadow(0 0 28px rgba(201,168,76,1)) drop-shadow(0 0 60px rgba(201,168,76,.45)) drop-shadow(0 0 100px rgba(201,168,76,.2)); }
   }
-  @keyframes ci-coreExpand {
-    0%   { r:0;  opacity:0; }
-    40%  { r:18; opacity:.35; }
-    100% { r:55; opacity:0; }
-  }
-  @keyframes ci-corePulse {
-    0%,100% { r:5; opacity:.7; }
-    50%     { r:9; opacity:1; }
-  }
+  @keyframes ci-coreExpand { 0%{r:0;opacity:0;} 40%{r:18;opacity:.35;} 100%{r:55;opacity:0;} }
+  @keyframes ci-corePulse  { 0%,100%{r:5;opacity:.7;} 50%{r:9;opacity:1;} }
 
   /* ── Light rays ── */
   @keyframes ci-ray {
@@ -462,83 +455,73 @@ const GLOBAL_CSS = `
     72%  { opacity:var(--ci-rayop,.08); }
     100% { opacity:0; }
   }
-  /* Slow-rotating ray group */
   @keyframes ci-raySpin { to { transform:rotate(360deg); } }
 
-  /* ── Aureole / halo rings that pulse outward ── */
-  @keyframes ci-halo {
-    0%   { transform:scale(.3); opacity:0; }
-    12%  { opacity:.28; }
-    100% { transform:scale(2.2); opacity:0; }
-  }
+  /* ── Halo ── */
+  @keyframes ci-halo { 0%{transform:scale(.3);opacity:0;} 12%{opacity:.28;} 100%{transform:scale(2.2);opacity:0;} }
 
-  /* ── AURUM letter-by-letter drop ── */
+  /* ── Text reveals ── */
   @keyframes ci-letterDrop {
     0%   { opacity:0; transform:translateY(-60px) rotateX(60deg) scale(.6); filter:blur(8px); }
     55%  { opacity:1; transform:translateY(6px)   rotateX(-4deg) scale(1.04); filter:blur(0); }
     75%  { transform:translateY(-3px) scale(.99); }
     100% { opacity:1; transform:translateY(0)     rotateX(0deg) scale(1); filter:blur(0); }
   }
-  /* ── Subtitle character wipe ── */
-  @keyframes ci-charWipe {
-    from { opacity:0; transform:translateX(-10px); clip-path:inset(0 100% 0 0); }
-    to   { opacity:1; transform:translateX(0);     clip-path:inset(0 0% 0 0); }
+  @keyframes ci-ruleGrow { from{transform:scaleX(0);opacity:0;} to{transform:scaleX(1);opacity:1;} }
+  @keyframes ci-tagWipe  { from{clip-path:inset(0 100% 0 0);opacity:0;} to{clip-path:inset(0 0% 0 0);opacity:1;} }
+  @keyframes ci-statPop  { 0%{opacity:0;transform:translateY(14px) scale(.85);} 60%{opacity:1;transform:translateY(-4px) scale(1.06);} 100%{opacity:1;transform:translateY(0) scale(1);} }
+  @keyframes ci-starPop  { 0%{opacity:0;transform:scale(0) rotate(-30deg);} 55%{transform:scale(1.3) rotate(5deg);opacity:1;} 80%{transform:scale(.92) rotate(-2deg);} 100%{transform:scale(1) rotate(0deg);opacity:1;} }
+  @keyframes ci-accoladeIn { from{opacity:0;transform:translateX(-24px) skewX(4deg);} to{opacity:1;transform:translateX(0) skewX(0deg);} }
+  @keyframes ci-quoteReveal { from{opacity:0;letter-spacing:.5em;filter:blur(6px);} to{opacity:1;letter-spacing:.05em;filter:blur(0);} }
+  @keyframes ci-timelineDot { 0%{transform:scale(0) rotate(-90deg);opacity:0;} 60%{transform:scale(1.4) rotate(10deg);opacity:1;} 100%{transform:scale(1) rotate(0deg);opacity:1;} }
+  @keyframes ci-textGlow {
+    0%,100% { text-shadow:0 0 20px rgba(201,168,76,.3),0 0 60px rgba(201,168,76,.1); }
+    50%     { text-shadow:0 0 40px rgba(201,168,76,.7),0 0 90px rgba(201,168,76,.3),0 0 140px rgba(201,168,76,.12); }
   }
-  /* ── Ornamental rule grow ── */
-  @keyframes ci-ruleGrow {
-    from { transform:scaleX(0); opacity:0; }
-    to   { transform:scaleX(1); opacity:1; }
+
+  /* ── Act IV: accolade slide + quote + timeline ── */
+  @keyframes ci-accoladeIn {
+    from { opacity:0; transform:translateX(-24px) skewX(4deg); }
+    to   { opacity:1; transform:translateX(0) skewX(0deg); }
   }
-  /* ── Tagline reveal (mask wipe right) ── */
-  @keyframes ci-tagWipe {
-    from { clip-path:inset(0 100% 0 0); opacity:0; }
-    to   { clip-path:inset(0 0% 0 0);   opacity:1; }
+  @keyframes ci-quoteReveal {
+    from { opacity:0; letter-spacing:.5em; filter:blur(6px); }
+    to   { opacity:1; letter-spacing:.05em; filter:blur(0); }
   }
-  /* ── Stat counter pop ── */
-  @keyframes ci-statPop {
-    0%   { opacity:0; transform:translateY(14px) scale(.85); }
-    60%  { opacity:1; transform:translateY(-4px) scale(1.06); }
-    100% { opacity:1; transform:translateY(0)    scale(1); }
-  }
-  /* ── Star pop ── */
-  @keyframes ci-starPop {
-    0%   { opacity:0; transform:scale(0) rotate(-30deg); }
-    55%  { transform:scale(1.3) rotate(5deg); opacity:1; }
-    80%  { transform:scale(.92) rotate(-2deg); }
+  @keyframes ci-timelineDot {
+    0%   { transform:scale(0) rotate(-90deg); opacity:0; }
+    60%  { transform:scale(1.4) rotate(10deg); opacity:1; }
     100% { transform:scale(1) rotate(0deg); opacity:1; }
   }
-  /* ── Idle glow on text ── */
-  @keyframes ci-textGlow {
-    0%,100% { text-shadow:0 0 20px rgba(201,168,76,.3), 0 0 60px rgba(201,168,76,.1); }
-    50%     { text-shadow:0 0 40px rgba(201,168,76,.7), 0 0 90px rgba(201,168,76,.3), 0 0 140px rgba(201,168,76,.12); }
+  @keyframes ci-accoladeGlow {
+    0%,100% { box-shadow:0 0 0 1px rgba(201,168,76,.12); }
+    50%     { box-shadow:0 0 0 1px rgba(201,168,76,.28), 0 4px 24px rgba(201,168,76,.08); }
+  }
+  @keyframes ci-dividerExpand {
+    from { transform:scaleX(0); opacity:0; }
+    to   { transform:scaleX(1); opacity:.35; }
   }
 
-  /* ── Shimmer sweep ── */
-  @keyframes ci-shimmer1 {
-    from { transform:translateX(-260%) skewX(-20deg); opacity:0; }
-    12%  { opacity:.8; }
-    88%  { opacity:.6; }
-    to   { transform:translateX(520%)  skewX(-20deg); opacity:0; }
-  }
-  @keyframes ci-shimmer2 {
-    from { transform:translateX(-200%) skewX(-14deg); opacity:0; }
-    12%  { opacity:.45; }
-    88%  { opacity:.35; }
-    to   { transform:translateX(400%)  skewX(-14deg); opacity:0; }
-  }
+  /* ── Shimmer sweeps ── */
+  @keyframes ci-shimmer1 { from{transform:translateX(-260%) skewX(-20deg);opacity:0;} 12%{opacity:.8;} 88%{opacity:.6;} to{transform:translateX(520%) skewX(-20deg);opacity:0;} }
+  @keyframes ci-shimmer2 { from{transform:translateX(-200%) skewX(-14deg);opacity:0;} 12%{opacity:.45;} 88%{opacity:.35;} to{transform:translateX(400%) skewX(-14deg);opacity:0;} }
+  @keyframes ci-shimmer3 { from{transform:translateX(-240%) skewX(-18deg);opacity:0;} 10%{opacity:.65;} 90%{opacity:.5;} to{transform:translateX(480%) skewX(-18deg);opacity:0;} }
+  @keyframes ci-shimmer3 { from{transform:translateX(-240%) skewX(-18deg);opacity:0;} 10%{opacity:.65;} 90%{opacity:.5;} to{transform:translateX(480%) skewX(-18deg);opacity:0;} }
 
-  /* ── Scan lines ── */
+  /* ── Scan lines (3 passes) ── */
   @keyframes ci-scan1 { from{top:-2px;opacity:0;} 3%{opacity:.6;} 94%{opacity:.35;} to{top:calc(100% + 2px);opacity:0;} }
   @keyframes ci-scan2 { from{top:-2px;opacity:0;} 3%{opacity:.4;} 94%{opacity:.2;}  to{top:calc(100% + 2px);opacity:0;} }
+  @keyframes ci-scan3 { from{top:-2px;opacity:0;} 3%{opacity:.55;} 94%{opacity:.3;} to{top:calc(100% + 2px);opacity:0;} }
+  @keyframes ci-scan3 { from{top:-2px;opacity:0;} 3%{opacity:.55;} 94%{opacity:.3;} to{top:calc(100% + 2px);opacity:0;} }
 
-  /* ── Side architectural panels ── */
+  /* ── Panels ── */
   @keyframes ci-panelIn  { from{opacity:0;transform:scaleY(0);} to{opacity:1;transform:scaleY(1);} }
   @keyframes ci-panelFade{ 0%,100%{opacity:.18;} 50%{opacity:.32;} }
 
-  /* ── Progress & HUD ── */
+  /* ── Progress / HUD ── */
   @keyframes ci-progress {
-    0%  {width:0%;}  5%{width:4%;} 18%{width:22%;} 35%{width:42%;}
-    52% {width:61%;} 68%{width:76%;} 82%{width:88%;} 100%{width:100%;}
+    0%{width:0%;} 4%{width:3%;} 12%{width:16%;} 25%{width:34%;}
+    42%{width:52%;} 60%{width:68%;} 78%{width:84%;} 92%{width:95%;} 100%{width:100%;}
   }
   @keyframes ci-progressGlow {
     0%,100%{box-shadow:0 0 6px rgba(201,168,76,.5);}
@@ -554,28 +537,244 @@ const GLOBAL_CSS = `
   }
   @keyframes ci-cornerPulse { 0%,100%{opacity:.4;} 50%{opacity:.8;} }
 
-  /* ── Slow rotations ── */
+  /* ── Rotations ── */
   @keyframes ci-spinCW  { to{transform:rotate( 360deg);} }
   @keyframes ci-spinCCW { to{transform:rotate(-360deg);} }
 
   /* ── Ambient ── */
   @keyframes ci-bokeh {
-    0%,100%{transform:translate(0,0) scale(1);} 
+    0%,100%{transform:translate(0,0) scale(1);}
     33%{transform:translate(var(--ci-bx1,30px),var(--ci-by1,-40px)) scale(var(--ci-bs1,1.1));}
     70%{transform:translate(var(--ci-bx2,-20px),var(--ci-by2,30px)) scale(var(--ci-bs2,.9));}
   }
   @keyframes ci-nebula  { 0%,100%{opacity:.65;transform:scale(1);} 50%{opacity:1;transform:scale(1.07);} }
-  @keyframes ci-aurora  {
-    0%,100%{opacity:.55;transform:translateX(0) skewX(0deg) scaleY(1);}
-    50%{opacity:.9;transform:translateX(20px) skewX(-2deg) scaleY(1.05);}
+  @keyframes ci-aurora  { 0%,100%{opacity:.55;transform:translateX(0) skewX(0deg) scaleY(1);} 50%{opacity:.9;transform:translateX(20px) skewX(-2deg) scaleY(1.05);} }
+  @keyframes ci-aurora2 { 0%,100%{opacity:.4;transform:translateX(0) skewX(0deg);} 50%{opacity:.7;transform:translateX(-15px) skewX(1.5deg);} }
+
+  /* ── Golden flash ── */
+  @keyframes ci-flash { 0%{opacity:0;} 35%{opacity:.9;} 100%{opacity:0;} }
+
+  /* ══════════════════════════════════════════════════════════════
+     5-PHASE CINEMATIC INTRO — ENHANCED ANIMATION SYSTEM v4
+     ══════════════════════════════════════════════════════════════ */
+
+  @keyframes ci-goldSweep {
+    0%   { transform:translateX(-120%) skewX(-22deg); opacity:0; }
+    6%   { opacity:.85; }
+    92%  { opacity:.65; }
+    100% { transform:translateX(260%) skewX(-22deg); opacity:0; }
   }
-  @keyframes ci-aurora2 {
-    0%,100%{opacity:.4;transform:translateX(0) skewX(0deg);}
-    50%{opacity:.7;transform:translateX(-15px) skewX(1.5deg);}
+  @keyframes ci-goldSweepFat {
+    0%   { transform:translateX(-80%) skewX(-18deg); opacity:0; }
+    8%   { opacity:.45; }
+    90%  { opacity:.25; }
+    100% { transform:translateX(220%) skewX(-18deg); opacity:0; }
+  }
+  @keyframes ci-logoGlowBreathe {
+    0%,100% { filter:drop-shadow(0 0 8px rgba(201,168,76,.45)) drop-shadow(0 0 22px rgba(201,168,76,.18)); transform:scale(1); }
+    50%     { filter:drop-shadow(0 0 28px rgba(201,168,76,1)) drop-shadow(0 0 70px rgba(201,168,76,.48)) drop-shadow(0 0 110px rgba(201,168,76,.2)); transform:scale(1.012); }
+  }
+  @keyframes ci-logoGlowIntense {
+    0%,100% { filter:drop-shadow(0 0 18px rgba(201,168,76,.7)) drop-shadow(0 0 45px rgba(201,168,76,.35)); transform:scale(1); }
+    50%     { filter:drop-shadow(0 0 48px rgba(201,168,76,1)) drop-shadow(0 0 100px rgba(201,168,76,.6)) drop-shadow(0 0 160px rgba(201,168,76,.28)); transform:scale(1.022); }
+  }
+  @keyframes ci-fgParticle {
+    0%   { transform:translate(0,0) scale(1); opacity:0; }
+    5%   { opacity:var(--ci-fop,.7); }
+    48%  { transform:translate(var(--ci-fwx,3px), calc(var(--ci-fry,-90px) * .5)) scale(.8); opacity:var(--ci-fop,.7); }
+    88%  { opacity:0; }
+    100% { transform:translate(var(--ci-fwx2,-4px), var(--ci-fry,-90px)) scale(.12); opacity:0; }
+  }
+  @keyframes ci-bgParticle {
+    0%   { transform:translate(0,0) scale(1); opacity:0; }
+    8%   { opacity:var(--ci-bop,.22); }
+    50%  { transform:translate(var(--ci-bwx,8px), calc(var(--ci-bry,-140px) * .5)) scale(.65); opacity:var(--ci-bop,.22); }
+    90%  { opacity:0; }
+    100% { transform:translate(var(--ci-bwx2,-6px), var(--ci-bry,-140px)) scale(.1); opacity:0; }
+  }
+  @keyframes ci-depthZoom1 { from{transform:scale(.965) translateZ(0);} to{transform:scale(1.0) translateZ(0);} }
+  @keyframes ci-depthZoom2 { 0%{transform:scale(1.0);} 50%{transform:scale(1.008);} 100%{transform:scale(1.0);} }
+  @keyframes ci-depthZoom4 { 0%{transform:scale(1.0);} 50%{transform:scale(1.022);} 100%{transform:scale(1.0);} }
+  @keyframes ci-counterIn  { 0%{opacity:0;transform:translateY(22px) scale(.8);} 60%{opacity:1;transform:translateY(-4px) scale(1.08);} 100%{opacity:1;transform:translateY(0) scale(1);} }
+  @keyframes ci-counterGlow{ 0%,100%{text-shadow:0 0 12px rgba(201,168,76,.4);} 50%{text-shadow:0 0 28px rgba(201,168,76,1),0 0 60px rgba(201,168,76,.4);} }
+  @keyframes ci-emphasisScale{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.018);} }
+  @keyframes ci-dissolve    { 0%{opacity:1;filter:blur(0px);} 100%{opacity:0;filter:blur(6px);} }
+  @keyframes ci-bgDarken    { 0%{background-color:transparent;} 100%{background-color:rgba(0,0,0,.6);} }
+  @keyframes ci-flare       { 0%{opacity:0;transform:translate(-50%,-50%) scale(0);} 14%{opacity:.85;} 100%{opacity:0;transform:translate(-50%,-50%) scale(3.2);} }
+  @keyframes ci-accentLine  { 0%{transform:scaleX(0);opacity:0;} 25%{opacity:.6;} 75%{opacity:.45;} 100%{transform:scaleX(1);opacity:0;} }
+  @keyframes ci-particleIntensify { from{opacity:.45;} to{opacity:1;} }
+
+  /* ════════════════════════════════════════════════════════════════
+     LOGIN PAGE — rich ambient animation system
+     ════════════════════════════════════════════════════════════════ */
+
+  /* ── Ambient dust particles (right panel background) ── */
+  @keyframes lp-dustRise {
+    0%   { transform:translate(0,0) scale(1); opacity:0; }
+    8%   { opacity:var(--lp-op,.3); }
+    50%  { transform:translate(var(--lp-vx,10px),var(--lp-vy,-100px)) scale(.65); opacity:var(--lp-op,.3); }
+    90%  { opacity:0; }
+    100% { transform:translate(var(--lp-vx2,-8px),var(--lp-vy2,-180px)) scale(.15); opacity:0; }
+  }
+  @keyframes lp-dustDrift {
+    0%,100%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%    { opacity:var(--lp-op,.18); }
+    50%    { transform:translateY(var(--lp-vy,-55px)) translateX(var(--lp-vx,22px)); opacity:var(--lp-op,.18); }
+    90%    { opacity:0; }
   }
 
-  /* ── Golden flash on exit ── */
-  @keyframes ci-flash { 0%{opacity:0;} 40%{opacity:.85;} 100%{opacity:0;} }
+  /* ── Floating card halo rings ── */
+  @keyframes lp-haloExpand {
+    0%  { transform:translate(-50%,-50%) scale(.92); opacity:.16; }
+    70% { opacity:0; transform:translate(-50%,-50%) scale(1.38); }
+    100%{ opacity:0; }
+  }
+  @keyframes lp-haloExpand2 {
+    0%  { transform:translate(-50%,-50%) scale(.92); opacity:.09; }
+    70% { opacity:0; transform:translate(-50%,-50%) scale(1.6); }
+    100%{ opacity:0; }
+  }
+
+  /* ── Floating ornament diamonds ── */
+  @keyframes lp-float1 { 0%,100%{transform:rotate(45deg) translateY(0);} 50%{transform:rotate(45deg) translateY(-9px);} }
+  @keyframes lp-float2 { 0%,100%{transform:rotate(45deg) translateY(0);} 50%{transform:rotate(45deg) translateY(7px);} }
+  @keyframes lp-float3 { 0%,100%{transform:rotate(45deg) translateY(0);} 50%{transform:rotate(45deg) translateY(-5px);} }
+  @keyframes lp-diamondGlow { 0%,100%{box-shadow:0 0 8px rgba(201,168,76,.3);} 50%{box-shadow:0 0 18px rgba(201,168,76,.7), 0 0 32px rgba(201,168,76,.25);} }
+
+  /* ── Card entrance (dramatic) ── */
+  @keyframes lp-cardIn {
+    from { opacity:0; transform:perspective(1200px) rotateX(14deg) translateY(40px) scale(.92); filter:blur(8px); }
+    55%  { filter:blur(0); }
+    75%  { transform:perspective(1200px) rotateX(-2deg) translateY(-4px) scale(1.01); }
+    to   { opacity:1; transform:perspective(1200px) rotateX(0deg) translateY(0) scale(1); filter:blur(0); }
+  }
+
+  /* ── Left panel hero text ── */
+  @keyframes lp-headIn  { from{opacity:0;transform:translateY(18px) skewY(-1.5deg);filter:blur(3px);} to{opacity:1;transform:translateY(0) skewY(0);filter:blur(0);} }
+  @keyframes lp-lineIn  { from{transform:scaleX(0);opacity:0;} to{transform:scaleX(1);opacity:1;} }
+  @keyframes lp-badgeIn { from{opacity:0;transform:translateY(12px) scale(.94);} to{opacity:1;transform:translateY(0) scale(1);} }
+
+  /* ── Input field micro-animations ── */
+  @keyframes lp-inputSweep {
+    from { transform:translateX(-130%) skewX(-16deg); opacity:0; }
+    15%  { opacity:.55; }
+    to   { transform:translateX(260%)  skewX(-16deg); opacity:0; }
+  }
+  @keyframes lp-inputHalo {
+    0%   { transform:translate(-50%,-50%) scale(.9); opacity:.22; }
+    100% { transform:translate(-50%,-50%) scale(1.22); opacity:0; }
+  }
+  @keyframes lp-underlineGrow {
+    from { transform:scaleX(0); }
+    to   { transform:scaleX(1); }
+  }
+  @keyframes lp-labelUp {
+    from { opacity:0; transform:translateY(4px) scale(.94); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  @keyframes lp-inputGlowPulse {
+    0%,100% { box-shadow:0 0 0 1.5px rgba(201,168,76,.55),0 8px 32px rgba(0,0,0,.2),inset 0 1px 0 rgba(201,168,76,.08); }
+    50%     { box-shadow:0 0 0 2.5px rgba(201,168,76,.3),0 8px 40px rgba(0,0,0,.24),0 0 28px rgba(201,168,76,.12),inset 0 1px 0 rgba(201,168,76,.16); }
+  }
+
+  /* ── Form divider grow ── */
+  @keyframes lp-dividerIn { from{transform:scaleX(0) translateY(-50%);opacity:0;} to{transform:scaleX(1) translateY(-50%);opacity:1;} }
+  @keyframes lp-dividerDot { 0%,100%{transform:scale(1) rotate(45deg);opacity:.4;} 50%{transform:scale(1.7) rotate(45deg);opacity:.9;} }
+
+  /* ── Submit button energy ── */
+  @keyframes lp-btnBreath {
+    0%,100%{ box-shadow:0 8px 32px rgba(201,168,76,.28),0 2px 8px rgba(201,168,76,.14); }
+    50%    { box-shadow:0 14px 48px rgba(201,168,76,.42),0 4px 14px rgba(201,168,76,.22),0 0 0 5px rgba(201,168,76,.05); }
+  }
+  @keyframes lp-btnOrbit {
+    0%   { transform:rotate(0deg)   translateX(var(--lp-r,32px)) rotate(0deg); }
+    100% { transform:rotate(360deg) translateX(var(--lp-r,32px)) rotate(-360deg); }
+  }
+  @keyframes lp-btnGlint { from{transform:translateX(-260%) skewX(-20deg);opacity:0;} 10%{opacity:.6;} 90%{opacity:.4;} to{transform:translateX(520%) skewX(-20deg);opacity:0;} }
+
+  /* ── Security badge ── */
+  @keyframes lp-secBadgeSpin { to{transform:rotate(360deg);} }
+  @keyframes lp-secBadgePulse{ 0%,100%{opacity:.5;transform:scale(1);} 50%{opacity:.9;transform:scale(1.1);} }
+  @keyframes lp-secRing { 0%{transform:scale(.8);opacity:0;} 20%{opacity:.45;} 100%{transform:scale(1.6);opacity:0;} }
+
+  /* ── Card shimmer sweep ── */
+  @keyframes lp-cardShimmer {
+    0%   { transform:translateX(-120%) skewX(-22deg); opacity:0; }
+    50%  { opacity:.3; }
+    100% { transform:translateX(240%)  skewX(-22deg); opacity:0; }
+  }
+
+  /* ── Background diagonal streaks (right panel) ── */
+  @keyframes lp-bgStreak {
+    0%   { transform:translateY(-100%) translateX(0) rotate(var(--lp-sr,38deg)); opacity:0; }
+    4%   { opacity:var(--lp-sop,.025); }
+    96%  { opacity:var(--lp-sop,.025); }
+    100% { transform:translateY(220%) translateX(0) rotate(var(--lp-sr,38deg)); opacity:0; }
+  }
+
+  /* ── Stats pop on left panel ── */
+  @keyframes lp-statIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+
+  /* ── Micro-dots on card perimeter ── */
+  @keyframes lp-microDot { 0%,100%{opacity:.2;transform:scale(.8);} 50%{opacity:.7;transform:scale(1.4);} }
+
+  /* ── Checkbox spring ── */
+  @keyframes lp-checkSpring { 0%{transform:scale(.4);} 55%{transform:scale(1.15);} 80%{transform:scale(.92);} 100%{transform:scale(1);} }
+
+  /* ── Link hover underline ── */
+  @keyframes lp-linkLine { from{transform:scaleX(0);transform-origin:left;} to{transform:scaleX(1);transform-origin:left;} }
+
+  /* ════════════════════════════════════════════════════════════════
+     LOGIN PAGE — rich ambient animation system
+     ════════════════════════════════════════════════════════════════ */
+
+  /* ── Ambient dust particles ── */
+  @keyframes lp-dustRise {
+    0%   { transform:translate(0,0) scale(1); opacity:0; }
+    8%   { opacity:var(--lp-op,.3); }
+    50%  { transform:translate(var(--lp-vx,10px),var(--lp-vy,-100px)) scale(.65); opacity:var(--lp-op,.3); }
+    90%  { opacity:0; }
+    100% { transform:translate(var(--lp-vx2,-8px),var(--lp-vy2,-180px)) scale(.15); opacity:0; }
+  }
+  /* ── Card halo rings ── */
+  @keyframes lp-haloExpand  { 0%{transform:translate(-50%,-50%) scale(.92);opacity:.16;} 70%{opacity:0;transform:translate(-50%,-50%) scale(1.38);} 100%{opacity:0;} }
+  @keyframes lp-haloExpand2 { 0%{transform:translate(-50%,-50%) scale(.92);opacity:.09;} 70%{opacity:0;transform:translate(-50%,-50%) scale(1.6);}  100%{opacity:0;} }
+  /* ── Floating diamonds ── */
+  @keyframes lp-float1 { 0%,100%{transform:rotate(45deg) translateY(0);} 50%{transform:rotate(45deg) translateY(-9px);} }
+  @keyframes lp-float2 { 0%,100%{transform:rotate(45deg) translateY(0);} 50%{transform:rotate(45deg) translateY(7px);} }
+  @keyframes lp-float3 { 0%,100%{transform:rotate(45deg) translateY(0);} 50%{transform:rotate(45deg) translateY(-5px);} }
+  @keyframes lp-diamondPulse { 0%,100%{box-shadow:0 0 8px rgba(201,168,76,.3);} 50%{box-shadow:0 0 18px rgba(201,168,76,.7),0 0 32px rgba(201,168,76,.25);} }
+  /* ── Input micro ── */
+  @keyframes lp-inputSweep { from{transform:translateX(-130%) skewX(-16deg);opacity:0;} 15%{opacity:.55;} to{transform:translateX(260%) skewX(-16deg);opacity:0;} }
+  @keyframes lp-inputHalo  { 0%{transform:translate(-50%,-50%) scale(.9);opacity:.22;} 100%{transform:translate(-50%,-50%) scale(1.22);opacity:0;} }
+  @keyframes lp-inputGlowPulse {
+    0%,100%{box-shadow:0 0 0 1.5px rgba(201,168,76,.55),0 8px 32px rgba(0,0,0,.2),inset 0 1px 0 rgba(201,168,76,.08);}
+    50%    {box-shadow:0 0 0 2.5px rgba(201,168,76,.3),0 8px 40px rgba(0,0,0,.24),0 0 28px rgba(201,168,76,.12),inset 0 1px 0 rgba(201,168,76,.16);}
+  }
+  /* ── Form divider ── */
+  @keyframes lp-dividerIn  { from{transform:scaleX(0) translateY(-50%);opacity:0;} to{transform:scaleX(1) translateY(-50%);opacity:1;} }
+  @keyframes lp-dividerDot { 0%,100%{transform:scale(1) rotate(45deg);opacity:.4;} 50%{transform:scale(1.7) rotate(45deg);opacity:.9;} }
+  /* ── Submit button ── */
+  @keyframes lp-btnBreath { 0%,100%{box-shadow:0 8px 32px rgba(201,168,76,.28),0 2px 8px rgba(201,168,76,.14);} 50%{box-shadow:0 14px 48px rgba(201,168,76,.42),0 4px 14px rgba(201,168,76,.22),0 0 0 5px rgba(201,168,76,.05);} }
+  @keyframes lp-btnOrbit  { 0%{transform:rotate(0deg) translateX(var(--lp-r,32px)) rotate(0deg);} 100%{transform:rotate(360deg) translateX(var(--lp-r,32px)) rotate(-360deg);} }
+  @keyframes lp-btnGlint  { from{transform:translateX(-260%) skewX(-20deg);opacity:0;} 10%{opacity:.6;} 90%{opacity:.4;} to{transform:translateX(520%) skewX(-20deg);opacity:0;} }
+  /* ── Security badge ── */
+  @keyframes lp-secSpin  { to{transform:rotate(360deg);} }
+  @keyframes lp-secPulse { 0%,100%{opacity:.5;transform:scale(1);} 50%{opacity:.9;transform:scale(1.1);} }
+  @keyframes lp-secRing  { 0%{transform:scale(.8);opacity:0;} 20%{opacity:.45;} 100%{transform:scale(1.6);opacity:0;} }
+  /* ── Card entrance ── */
+  @keyframes lp-cardIn { from{opacity:0;transform:perspective(1200px) rotateX(12deg) translateY(36px) scale(.93);filter:blur(7px);} 55%{filter:blur(0);} 78%{transform:perspective(1200px) rotateX(-2deg) translateY(-3px) scale(1.01);} to{opacity:1;transform:perspective(1200px) rotateX(0) translateY(0) scale(1);filter:blur(0);} }
+  /* ── Left-panel hero text ── */
+  @keyframes lp-headIn { from{opacity:0;transform:translateY(16px) skewY(-1.5deg);filter:blur(3px);} to{opacity:1;transform:translateY(0) skewY(0);filter:blur(0);} }
+  @keyframes lp-lineIn  { from{transform:scaleX(0);opacity:0;} to{transform:scaleX(1);opacity:1;} }
+  /* ── BG streaks ── */
+  @keyframes lp-bgStreak { 0%{transform:translateY(-100%) rotate(var(--lp-sr,38deg));opacity:0;} 4%{opacity:var(--lp-sop,.022);} 96%{opacity:var(--lp-sop,.022);} 100%{transform:translateY(220%) rotate(var(--lp-sr,38deg));opacity:0;} }
+  /* ── Stats pop ── */
+  @keyframes lp-statIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+  /* ── Checkbox spring ── */
+  @keyframes lp-checkSpring { 0%{transform:scale(.4);} 55%{transform:scale(1.15);} 80%{transform:scale(.92);} 100%{transform:scale(1);} }
+  /* ── Micro-orbs (right panel) ── */
+  @keyframes lp-microOrb { 0%,100%{transform:translate(0,0) scale(1);opacity:.08;} 33%{transform:translate(var(--lp-mx,20px),var(--lp-my,-30px)) scale(1.14);opacity:.14;} 66%{transform:translate(var(--lp-mx2,-14px),var(--lp-my2,18px)) scale(.88);opacity:.06;} }
 `;
 
 
@@ -610,7 +809,8 @@ const CONSTELLATION_LINES = STARS.slice(0, 90).reduce((acc, s, i) => {
 
 
 // ─────────────────────────────────────────────────────────────
-// CINEMATIC INTRO — v2 data (deterministic, no Math.random)
+// ─────────────────────────────────────────────────────────────
+// CINEMATIC INTRO — v3 data (15 seconds, deterministic)
 // ─────────────────────────────────────────────────────────────
 
 const lcg = (seed, n) => {
@@ -618,7 +818,6 @@ const lcg = (seed, n) => {
   return Array.from({ length: n }, () => { s = (1664525 * s + 1013904223) >>> 0; return s / 0xFFFFFFFF; });
 };
 
-/** 90 rising ember particles */
 const EMBERS = Array.from({ length: 90 }, (_, i) => {
   const [rx, ry, rw, ro, rd, rdl, rwx, rwx2] = lcg(i * 7919 + 3571, 8);
   return {
@@ -627,15 +826,14 @@ const EMBERS = Array.from({ length: 90 }, (_, i) => {
     sz:    (0.9 + rw * 2.2).toFixed(1),
     op:    (0.2 + ro * 0.55).toFixed(2),
     ry:    `-${(90 + rd * 280).toFixed(0)}px`,
-    dl:    (rdl * 5.0).toFixed(2),
-    dr:    (3.5 + rw * 4.5).toFixed(2),
+    dl:    (rdl * 6.0).toFixed(2),
+    dr:    (3.5 + rw * 5.0).toFixed(2),
     wx:    `${((rwx - 0.5) * 28).toFixed(1)}px`,
     wx2:   `${((rwx2 - 0.5) * 20).toFixed(1)}px`,
     gold:  i % 7 === 0,
   };
 });
 
-/** 50 orbital debris particles */
 const DEBRIS = Array.from({ length: 50 }, (_, i) => {
   const a = (i / 50) * 2 * Math.PI;
   const [rd, ro, rsz, rdl, rdr] = lcg(i * 2654435761 + 1013904223, 5);
@@ -651,7 +849,6 @@ const DEBRIS = Array.from({ length: 50 }, (_, i) => {
   };
 });
 
-/** 18 light rays */
 const RAYS = Array.from({ length: 18 }, (_, i) => ({
   deg: `${(i / 18) * 360}deg`,
   op:  (0.035 + (i % 4) * 0.018).toFixed(3),
@@ -659,7 +856,6 @@ const RAYS = Array.from({ length: 18 }, (_, i) => ({
   h:   `${52 + (i % 3) * 8}vh`,
 }));
 
-/** Mandala rings — 6 layers */
 const M_RINGS = [
   { r:340, sd:"",     rop:.15, sw:.65, dl:"0.25s", dur:"2.2s" },
   { r:290, sd:"8 14", rop:.11, sw:.38, dl:"0.45s", dur:"2.0s" },
@@ -669,36 +865,29 @@ const M_RINGS = [
   { r: 80, sd:"2 6",  rop:.20, sw:.40, dl:"1.20s", dur:"1.0s" },
 ].map(r => ({ ...r, perim: Math.round(2 * Math.PI * r.r) }));
 
-/** 128 tick marks on outer ring */
 const M_TICKS = Array.from({ length: 128 }, (_, i) => {
-  const a = (i / 128) * 2 * Math.PI;
+  const a = (i / 128) * 2 * Math.PI, R = 340;
   const isMaj = i % 16 === 0, isMed = i % 8 === 0, isMin = i % 4 === 0;
-  const R = 340;
   const len = isMaj ? 22 : isMed ? 13 : isMin ? 7 : 4;
   return {
     x1: 400 + Math.cos(a) * R, y1: 400 + Math.sin(a) * R,
     x2: 400 + Math.cos(a) * (R - len), y2: 400 + Math.sin(a) * (R - len),
-    isMaj, isMed, isMin,
     dl: `${(0.25 + i * 0.005).toFixed(3)}s`,
     op: isMaj ? .32 : isMed ? .20 : isMin ? .12 : .07,
     sw: isMaj ? 1.4 : isMed ? .75 : isMin ? .45 : .28,
   };
 });
 
-/** 32 radial spokes */
 const M_SPOKES = Array.from({ length: 32 }, (_, i) => {
-  const a = (i / 32) * 2 * Math.PI;
-  const major = i % 4 === 0;
+  const a = (i / 32) * 2 * Math.PI, major = i % 4 === 0;
   return {
     x1: 400 + Math.cos(a) * 48,  y1: 400 + Math.sin(a) * 48,
     x2: 400 + Math.cos(a) * 340, y2: 400 + Math.sin(a) * 340,
-    op: (major ? .28 : .12).toFixed(2),
-    sw: major ? .55 : .28,
+    op: (major ? .28 : .12).toFixed(2), sw: major ? .55 : .28,
     dl: `${(1.0 + i * 0.035).toFixed(3)}s`,
   };
 });
 
-/** 12 diamond accents on ring */
 const M_DIAMONDS = [0,30,60,90,120,150,180,210,240,270,300,330].map((deg, i) => {
   const a = deg * Math.PI / 180;
   const R = deg % 90 === 0 ? 340 : deg % 60 === 0 ? 290 : 235;
@@ -706,118 +895,167 @@ const M_DIAMONDS = [0,30,60,90,120,150,180,210,240,270,300,330].map((deg, i) => 
   return { cx: 400 + Math.cos(a) * R, cy: 400 + Math.sin(a) * R, sz, deg, dl: `${(1.3 + i * 0.07).toFixed(2)}s` };
 });
 
-/** Halo pulse rings */
 const HALOS = [
   { delay:"1.6s", dur:"3.2s", color:"rgba(201,168,76,.22)" },
   { delay:"2.6s", dur:"3.2s", color:"rgba(201,168,76,.14)" },
   { delay:"3.8s", dur:"3.2s", color:"rgba(201,168,76,.08)" },
 ];
 
-/** AURUM letters */
-const LETTERS = ["A","U","R","U","M"].map((ch, i) => ({
-  ch, dl: `${(3.0 + i * 0.12).toFixed(2)}s`,
-}));
-
-/** Bottom stats */
-const STATS = [
-  { num:"18+", label:"Years" },
-  { num:"3★",  label:"Michelin" },
-  { num:"40+", label:"Venues" },
+const LETTERS  = ["A","U","R","U","M"].map((ch, i) => ({ ch, dl: `${(3.0 + i * 0.12).toFixed(2)}s` }));
+const STATS    = [{ num:"18+", label:"Years" }, { num:"3\u2605", label:"Michelin" }, { num:"40+", label:"Venues" }];
+const ACCOLADES = [
+  { icon:"\u2605", label:"James Beard Foundation",        sub:"Outstanding Restaurant \u00b7 2019 & 2022" },
+  { icon:"\u25c6", label:"S.Pellegrino World\u2019s 50 Best", sub:"Ranked #12 Globally" },
+  { icon:"\u25c9", label:"Wine Spectator Grand Award",     sub:"14 Consecutive Years" },
+];
+const TIMELINE = [
+  { year:"2014", event:"Founded" }, { year:"2016", event:"1st Star" },
+  { year:"2018", event:"Top 50" }, { year:"2020", event:"3 Stars" }, { year:"2024", event:"40 Venues" },
 ];
 
 // ─────────────────────────────────────────────────────────────
-// CINEMATIC INTRO COMPONENT — v2 (9 seconds)
+// CINEMATIC INTRO COMPONENT — v4 (15 seconds / 5 phases)
+// Phase 1 (0–3s)    Atmosphere    particles, parallax, logo emerging
+// Phase 2 (3–6s)    Brand Reveal  logo sharpens, typography stagger, sweep
+// Phase 3 (6–9s)    Prestige      animated counters, accent lines, flares
+// Phase 4 (9–12s)   Elevation     crescendo, depth zoom, particles intensify
+// Phase 5 (12–15s)  Transition    dissolve, darken, flash, exit
 // ─────────────────────────────────────────────────────────────
 
-/**
- * ACT I   (0.0–1.5s) Genesis — rings draw, ticks appear, scan #1 sweeps
- * ACT II  (1.0–2.8s) Revelation — spokes, diamonds, halos, crest draws, rays bloom
- * ACT III (3.0–5.5s) Identity — letters drop, rules extend, subtitle/tagline/stars/stats reveal
- * ACT IV  (6.0–8.3s) Presence — everything breathes, progress fills to 100%
- * ACT V   (8.3–9.1s) Transcendence — golden flash, blur-scale-brightness exit
- */
+/* ── Deterministic particle data ── */
+const lcgN = (seed, n, lo=0, hi=1) => {
+  let s = seed >>> 0;
+  return Array.from({length:n}, () => { s = (1664525 * s + 1013904223) >>> 0; return lo + (s / 0xFFFFFFFF) * (hi - lo); });
+};
+
+const FG_PARTICLES = Array.from({length:50}, (_,i) => {
+  const [rx,ry,rsz,rop,rdl,rdr,rwx,rwx2,rry] = lcgN(i*9311+4127, 9);
+  return {
+    left: `${(rx * 92 + 4).toFixed(1)}%`,
+    bottom: `${(ry * 35).toFixed(1)}%`,
+    sz: (1.4 + rsz * 2.8).toFixed(1),
+    op: (0.35 + rop * 0.6).toFixed(2),
+    ry: `-${(60 + rry * 200).toFixed(0)}px`,
+    dl: (rdl * 5.5).toFixed(2),
+    dr: (2.8 + rdr * 4.2).toFixed(2),
+    wx: `${((rwx - 0.5) * 22).toFixed(1)}px`,
+    wx2: `${((rwx2 - 0.5) * 16).toFixed(1)}px`,
+    gold: i % 5 === 0,
+  };
+});
+
+const BG_PARTICLES = Array.from({length:70}, (_,i) => {
+  const [rx,ry,rsz,rop,rdl,rdr,rwx,rwx2,rry] = lcgN(i*3571+1193, 9);
+  return {
+    left: `${(rx * 96 + 2).toFixed(1)}%`,
+    bottom: `${(ry * 55).toFixed(1)}%`,
+    sz: (0.5 + rsz * 1.4).toFixed(1),
+    op: (0.08 + rop * 0.22).toFixed(2),
+    ry: `-${(80 + rry * 260).toFixed(0)}px`,
+    dl: (rdl * 8.0).toFixed(2),
+    dr: (5.0 + rdr * 7.0).toFixed(2),
+    wx: `${((rwx - 0.5) * 36).toFixed(1)}px`,
+    wx2: `${((rwx2 - 0.5) * 28).toFixed(1)}px`,
+  };
+});
+
+/* Micro-flare positions for phase 3 */
+const FLARES = [
+  {x:"22%",y:"38%",dl:"6.2s",sz:60,dur:.55},
+  {x:"78%",y:"55%",dl:"7.1s",sz:40,dur:.45},
+  {x:"50%",y:"28%",dl:"7.8s",sz:80,dur:.6},
+  {x:"34%",y:"72%",dl:"8.5s",sz:35,dur:.4},
+  {x:"64%",y:"18%",dl:"9.0s",sz:50,dur:.5},
+];
+
 const CinematicIntro = ({ gold = "#c9a84c", goldLight = "#e8c97a", onComplete }) => {
   const prefersReduced = typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const [phase, setPhase] = useState("enter");
+  const [cinematicPhase, setCinematicPhase] = useState(1);
+  const [exitPhase, setExitPhase] = useState("enter");
   const [flashOn, setFlashOn] = useState(false);
   const G = gold, GL = goldLight;
 
   useEffect(() => {
     if (prefersReduced) { onComplete?.(); return; }
-    const t1 = setTimeout(() => setFlashOn(true),  8300);
-    const t2 = setTimeout(() => setPhase("exit"),   8500);
-    const t3 = setTimeout(() => onComplete?.(),     9200);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    // Phase advancement timers — every 3s a new phase begins
+    const p2 = setTimeout(() => setCinematicPhase(2), 3000);
+    const p3 = setTimeout(() => setCinematicPhase(3), 6000);
+    const p4 = setTimeout(() => setCinematicPhase(4), 9000);
+    const p5 = setTimeout(() => setCinematicPhase(5), 12000);
+    // Exit sequence
+    const tf = setTimeout(() => setFlashOn(true),    13500);
+    const te = setTimeout(() => setExitPhase("exit"),13800);
+    const tc = setTimeout(() => onComplete?.(),       15300);
+    return () => { [p2,p3,p4,p5,tf,te,tc].forEach(clearTimeout); };
   }, [onComplete, prefersReduced]);
 
   if (prefersReduced) return null;
 
+  /* Phase-driven values */
+  const isPhase = (n) => cinematicPhase >= n;
+  const logoAnim = cinematicPhase >= 4
+    ? "ci-logoGlowIntense 2.2s ease-in-out infinite"
+    : "ci-logoGlowBreathe 3.5s ease-in-out infinite";
+  const particleOpacityMult = cinematicPhase >= 4 ? 1.0 : cinematicPhase >= 3 ? 0.75 : 0.5;
+  const contentZoomAnim = cinematicPhase === 1
+    ? "ci-depthZoom1 3.0s cubic-bezier(0.16,1,0.3,1) both"
+    : cinematicPhase === 4
+    ? "ci-depthZoom4 3.0s ease-in-out both"
+    : "ci-depthZoom2 3.0s ease-in-out infinite";
+
   return (
-    <div
-      role="status"
-      aria-label="Loading Aurum Restaurant Group"
-      aria-live="polite"
+    <div role="status" aria-label="Loading Aurum Restaurant Group" aria-live="polite"
       style={{
-        position:"fixed", inset:0, zIndex:9999, overflow:"hidden",
-        background:"#06060f",
-        display:"flex", flexDirection:"column",
-        alignItems:"center", justifyContent:"center",
-        animation: phase === "exit"
-          ? "ci-overlayExit 0.72s cubic-bezier(0.16,1,0.3,1) both"
+        position:"fixed", inset:0, zIndex:9999, overflow:"hidden", background:"#06060f",
+        display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+        animation: exitPhase === "exit"
+          ? "ci-overlayExit 1.4s cubic-bezier(0.16,1,0.3,1) both"
           : "ci-bgReveal 0.55s ease both",
         willChange:"opacity,transform,filter",
       }}
     >
-      {/* ── Film grain ── */}
-      <div aria-hidden="true" style={{
-        position:"absolute", inset:"-80px", pointerEvents:"none", opacity:.07,
+      {/* Film grain */}
+      <div aria-hidden="true" style={{ position:"absolute", inset:"-80px", pointerEvents:"none", opacity:.07,
         backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.76' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")`,
-        backgroundSize:"180px", mixBlendMode:"screen",
-      }}/>
+        backgroundSize:"180px", mixBlendMode:"screen" }}/>
 
-      {/* ── Deep-space base ── */}
-      <div aria-hidden="true" style={{
-        position:"absolute", inset:0, pointerEvents:"none",
-        background:`
-          radial-gradient(ellipse 85% 60% at 15% 8%,  rgba(201,168,76,.14) 0%, transparent 50%),
-          radial-gradient(ellipse 70% 80% at 88% 94%, rgba(45,25,170,.20)  0%, transparent 55%),
-          radial-gradient(ellipse 45% 45% at 55% 45%, rgba(10,6,28,.92)    0%, transparent 78%),
-          linear-gradient(168deg, #03030b 0%, #07051a 28%, #06040f 60%, #020208 100%)
-        `,
-      }}/>
+      {/* Deep-space base */}
+      <div aria-hidden="true" style={{ position:"absolute", inset:0, pointerEvents:"none",
+        background:`radial-gradient(ellipse 85% 60% at 15% 8%,rgba(201,168,76,.14) 0%,transparent 50%),
+          radial-gradient(ellipse 70% 80% at 88% 94%,rgba(45,25,170,.20) 0%,transparent 55%),
+          radial-gradient(ellipse 45% 45% at 55% 45%,rgba(10,6,28,.92) 0%,transparent 78%),
+          linear-gradient(168deg,#03030b 0%,#07051a 28%,#06040f 60%,#020208 100%)` }}/>
 
-      {/* ── Nebula clouds ── */}
+      {/* Nebula clouds */}
       <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"
         style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}}>
         <defs>
           <filter id="ci-nb1"><feGaussianBlur stdDeviation="8"/></filter>
           <filter id="ci-nb2"><feGaussianBlur stdDeviation="13"/></filter>
         </defs>
-        <ellipse cx="14" cy="18" rx="28" ry="22" fill="rgba(201,168,76,.08)" filter="url(#ci-nb2)" style={{animation:"ci-nebula 22s ease-in-out infinite"}}/>
-        <ellipse cx="84" cy="80" rx="32" ry="26" fill="rgba(45,25,170,.10)"  filter="url(#ci-nb2)" style={{animation:"ci-nebula 28s 6s ease-in-out infinite"}}/>
-        <ellipse cx="90" cy="28" rx="18" ry="22" fill="rgba(201,168,76,.06)" filter="url(#ci-nb1)" style={{animation:"ci-nebula 17s 10s ease-in-out infinite"}}/>
-        <ellipse cx="12" cy="70" rx="20" ry="16" fill="rgba(45,25,170,.08)"  filter="url(#ci-nb1)" style={{animation:"ci-nebula 21s 3s ease-in-out infinite"}}/>
-        <ellipse cx="52" cy="55" rx="12" ry="12" fill="rgba(201,168,76,.05)" filter="url(#ci-nb1)" style={{animation:"ci-nebula 32s 15s ease-in-out infinite"}}/>
+        {[{cx:14,cy:18,rx:28,ry:22,fill:"rgba(201,168,76,.08)",f:"ci-nb2",dur:"22s",dl:"0s"},
+          {cx:84,cy:80,rx:32,ry:26,fill:"rgba(45,25,170,.10)",f:"ci-nb2",dur:"28s",dl:"6s"},
+          {cx:90,cy:28,rx:18,ry:22,fill:"rgba(201,168,76,.06)",f:"ci-nb1",dur:"17s",dl:"10s"},
+          {cx:12,cy:70,rx:20,ry:16,fill:"rgba(45,25,170,.08)",f:"ci-nb1",dur:"21s",dl:"3s"},
+          {cx:52,cy:55,rx:12,ry:12,fill:"rgba(201,168,76,.05)",f:"ci-nb1",dur:"32s",dl:"15s"},
+        ].map((e,i)=>(
+          <ellipse key={i} cx={e.cx} cy={e.cy} rx={e.rx} ry={e.ry} fill={e.fill}
+            filter={`url(#${e.f})`} style={{animation:`ci-nebula ${e.dur} ${e.dl} ease-in-out infinite`}}/>
+        ))}
       </svg>
 
-      {/* ── Aurora bands ── */}
+      {/* Aurora bands */}
       <div aria-hidden="true" style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
-        <div style={{
-          position:"absolute",left:"-25%",right:"-25%",top:"8%",height:"18%",
+        <div style={{position:"absolute",left:"-25%",right:"-25%",top:"8%",height:"18%",
           background:`linear-gradient(180deg,transparent 0%,rgba(201,168,76,.05) 28%,rgba(201,168,76,.09) 50%,rgba(201,168,76,.05) 72%,transparent 100%)`,
-          transform:"rotate(-1.5deg)",
-          animation:"ci-aurora 30s ease-in-out infinite",
-        }}/>
-        <div style={{
-          position:"absolute",left:"-25%",right:"-25%",bottom:"14%",height:"14%",
+          transform:"rotate(-1.5deg)",animation:"ci-aurora 30s ease-in-out infinite"}}/>
+        <div style={{position:"absolute",left:"-25%",right:"-25%",bottom:"14%",height:"14%",
           background:`linear-gradient(180deg,transparent 0%,rgba(45,25,170,.06) 38%,rgba(45,25,170,.10) 55%,rgba(45,25,170,.06) 72%,transparent 100%)`,
-          transform:"rotate(1deg)",
-          animation:"ci-aurora2 38s 8s ease-in-out infinite",
-        }}/>
+          transform:"rotate(1deg)",animation:"ci-aurora2 38s 8s ease-in-out infinite"}}/>
       </div>
 
-      {/* ── Bokeh orbs ── */}
+      {/* Bokeh orbs */}
       {[
         {w:700,h:700,top:"-260px",left:"-200px",c:`rgba(201,168,76,.15)`,bx1:"-35px",by1:"-55px",bs1:1.15,bx2:"28px",by2:"40px",bs2:.88,dur:"24s"},
         {w:550,h:550,bottom:"-200px",right:"-160px",c:`rgba(45,25,170,.18)`,bx1:"40px",by1:"-30px",bs1:.82,bx2:"-25px",by2:"50px",bs2:1.22,dur:"32s"},
@@ -835,39 +1073,137 @@ const CinematicIntro = ({ gold = "#c9a84c", goldLight = "#e8c97a", onComplete })
         }}/>
       ))}
 
-      {/* ── Scanline texture ── */}
-      <div aria-hidden="true" style={{
-        position:"absolute",inset:0,pointerEvents:"none",
-        backgroundImage:`repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 3px)`,
-      }}/>
+      {/* Scanlines */}
+      <div aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",
+        backgroundImage:`repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 3px)`}}/>
 
-      {/* ── Scan line #1 (early, 5.5s duration) ── */}
-      <div aria-hidden="true" style={{
-        position:"absolute",left:0,right:0,height:2,top:0,
+      {/* ══ PHASE-DRIVEN LAYER SYSTEM ══ */}
+
+      {/* BG Particle Layer — slow, dim, always present */}
+      <div aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:1,
+        opacity: cinematicPhase >= 4 ? 1 : cinematicPhase >= 3 ? 0.8 : 0.5,
+        transition:"opacity 2s cubic-bezier(0.16,1,0.3,1)",
+      }}>
+        {BG_PARTICLES.map((p,i)=>(
+          <div key={i} style={{
+            position:"absolute", left:p.left, bottom:p.bottom,
+            width:`${p.sz}px`, height:`${p.sz}px`, borderRadius:"50%",
+            background:`radial-gradient(circle, ${G}${i%8===0?"cc":"77"} 0%, transparent 70%)`,
+            "--ci-bop":`${(parseFloat(p.op)*particleOpacityMult).toFixed(2)}`,
+            "--ci-bry":p.ry, "--ci-bwx":p.wx, "--ci-bwx2":p.wx2,
+            animation:`ci-bgParticle ${p.dr}s ${p.dl}s cubic-bezier(0.16,1,0.3,1) infinite`,
+            willChange:"transform,opacity",
+          }}/>
+        ))}
+      </div>
+
+      {/* FG Particle Layer — appears phase 2+, intensifies each phase */}
+      {isPhase(2) && (
+        <div aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:2,
+          opacity: cinematicPhase >= 4 ? 1 : cinematicPhase >= 3 ? 0.8 : 0.6,
+          transition:"opacity 2s cubic-bezier(0.16,1,0.3,1)",
+        }}>
+          {FG_PARTICLES.map((p,i)=>(
+            <div key={i} style={{
+              position:"absolute", left:p.left, bottom:p.bottom,
+              width:`${p.sz}px`, height:`${p.sz}px`, borderRadius:"50%",
+              background:p.gold
+                ? `radial-gradient(circle, ${GL} 0%, ${G} 40%, transparent 75%)`
+                : `radial-gradient(circle, ${G}ee 0%, ${G}55 50%, transparent 75%)`,
+              boxShadow: p.gold ? `0 0 ${parseFloat(p.sz)*2}px ${G}88` : "none",
+              "--ci-fop":`${(parseFloat(p.op)*particleOpacityMult).toFixed(2)}`,
+              "--ci-fry":p.ry, "--ci-fwx":p.wx, "--ci-fwx2":p.wx2,
+              animation:`ci-fgParticle ${p.dr}s ${p.dl}s cubic-bezier(0.16,1,0.3,1) infinite`,
+              willChange:"transform,opacity",
+            }}/>
+          ))}
+        </div>
+      )}
+
+      {/* Gold light sweep — Phase 2 fires first, Phase 3 & 4 add more */}
+      <div aria-hidden="true" style={{position:"absolute",top:0,left:0,right:0,bottom:0,pointerEvents:"none",zIndex:3,overflow:"hidden"}}>
+        {/* Sweep 1 — Phase 2 */}
+        <div style={{position:"absolute",top:0,left:"-60%",width:"35%",height:"100%",
+          background:`linear-gradient(105deg, transparent, ${G}22, ${GL}44, ${G}22, transparent)`,
+          animation:"ci-goldSweep 1.8s 3.2s cubic-bezier(0.16,1,0.3,1) both",
+          willChange:"transform,opacity"
+        }}/>
+        {/* Wide backdrop sweep — Phase 2 */}
+        <div style={{position:"absolute",top:0,left:"-80%",width:"55%",height:"100%",
+          background:`linear-gradient(105deg, transparent, ${G}0a, ${G}18, ${G}0a, transparent)`,
+          animation:"ci-goldSweepFat 2.4s 3.5s cubic-bezier(0.16,1,0.3,1) both",
+          willChange:"transform,opacity"
+        }}/>
+        {/* Sweep 2 — Phase 3 */}
+        {isPhase(3) && (
+          <div style={{position:"absolute",top:0,left:"-60%",width:"30%",height:"100%",
+            background:`linear-gradient(108deg, transparent, ${G}28, ${GL}55, ${G}28, transparent)`,
+            animation:"ci-goldSweep 1.5s 0.3s cubic-bezier(0.16,1,0.3,1) both",
+            willChange:"transform,opacity"
+          }}/>
+        )}
+        {/* Sweep 3 — Phase 4 crescendo */}
+        {isPhase(4) && (
+          <div style={{position:"absolute",top:0,left:"-60%",width:"40%",height:"100%",
+            background:`linear-gradient(105deg, transparent, ${G}35, ${GL}70, ${G}35, transparent)`,
+            animation:"ci-goldSweep 1.2s 0.2s cubic-bezier(0.16,1,0.3,1) both",
+            willChange:"transform,opacity"
+          }}/>
+        )}
+      </div>
+
+      {/* Phase 3 — Micro light flares */}
+      {isPhase(3) && (
+        <div aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:3}}>
+          {FLARES.map((f,i)=>(
+            <div key={i} style={{
+              position:"absolute", left:f.x, top:f.y,
+              width:f.sz, height:f.sz, borderRadius:"50%",
+              background:`radial-gradient(circle, ${GL}cc 0%, ${G}66 30%, transparent 70%)`,
+              animation:`ci-flare ${f.dur}s ${f.dl} cubic-bezier(0.16,1,0.3,1) both`,
+              willChange:"transform,opacity",
+            }}/>
+          ))}
+          {/* Phase 3 accent lines */}
+          {[{dl:"6.4s",top:"30%"},{dl:"7.2s",top:"55%"},{dl:"7.9s",top:"72%"}].map((l,i)=>(
+            <div key={i} aria-hidden="true" style={{
+              position:"absolute",left:0,right:0,top:l.top,height:1,transformOrigin:"left",
+              background:`linear-gradient(to right, transparent, ${G}44 20%, ${G}66 50%, ${G}44 80%, transparent)`,
+              animation:`ci-accentLine 1.8s ${l.dl} cubic-bezier(0.16,1,0.3,1) both`,
+            }}/>
+          ))}
+        </div>
+      )}
+
+      {/* Phase 5 — background darkening veil */}
+      {isPhase(5) && (
+        <div aria-hidden="true" style={{
+          position:"absolute",inset:0,pointerEvents:"none",zIndex:4,
+          animation:"ci-bgDarken 2.5s cubic-bezier(0.16,1,0.3,1) both",
+        }}/>
+      )}
+
+      {/* Scan #1 */}
+      <div aria-hidden="true" style={{position:"absolute",left:0,right:0,height:2,top:0,pointerEvents:"none",zIndex:5,
         background:`linear-gradient(to right,transparent,${G}55 15%,${GL}99 50%,${G}55 85%,transparent)`,
-        boxShadow:`0 0 16px ${G}55,0 0 40px ${G}22`,
-        animation:"ci-scan1 5.5s 0.5s linear both",
-        pointerEvents:"none",
-      }}/>
-
-      {/* ── Scan line #2 (late sweep at ~5.8s) ── */}
-      <div aria-hidden="true" style={{
-        position:"absolute",left:0,right:0,height:1,top:0,
+        boxShadow:`0 0 16px ${G}55,0 0 40px ${G}22`,animation:"ci-scan1 7s 0.5s linear both"}}/>
+      {/* Scan #2 */}
+      <div aria-hidden="true" style={{position:"absolute",left:0,right:0,height:1,top:0,pointerEvents:"none",zIndex:5,
         background:`linear-gradient(to right,transparent,${G}44 20%,${GL}77 50%,${G}44 80%,transparent)`,
-        boxShadow:`0 0 10px ${G}44`,
-        animation:"ci-scan2 4.5s 5.8s linear both",
-        pointerEvents:"none",
-      }}/>
+        boxShadow:`0 0 10px ${G}44`,animation:"ci-scan2 6s 7.0s linear both"}}/>
+      {/* Scan #3 */}
+      <div aria-hidden="true" style={{position:"absolute",left:0,right:0,height:1.5,top:0,pointerEvents:"none",zIndex:5,
+        background:`linear-gradient(to right,transparent,${G}66 18%,${GL}99 50%,${G}66 82%,transparent)`,
+        boxShadow:`0 0 12px ${G}55`,animation:"ci-scan3 5s 11.5s linear both"}}/>
 
-      {/* ── Side architectural panels ── */}
+      {/* Architectural side panels */}
       {[
-        { side:"left",  lineX:72, lineX2:64, textX:36, label:"AURUM · MMXIV",  dl:"0.4s" },
-        { side:"right", lineX:8,  lineX2:16, textX:44, label:"★★★ MICHELIN",   dl:"0.6s" },
+        { side:"left",  lineX:72, lineX2:64, textX:36, label:"AURUM \u00b7 MMXIV", dl:"0.4s" },
+        { side:"right", lineX:8,  lineX2:16, textX:44, label:"\u2605\u2605\u2605 MICHELIN", dl:"0.6s" },
       ].map((p,i)=>(
         <div key={i} aria-hidden="true" style={{
           position:"absolute",[p.side]:0,top:0,bottom:0,width:"clamp(48px,6vw,80px)",
-          pointerEvents:"none",
-          transformOrigin:"top center",
+          pointerEvents:"none",transformOrigin:"top center",zIndex:5,
           animation:`ci-panelIn 1.2s ${p.dl} cubic-bezier(0.16,1,0.3,1) both, ci-panelFade 5s ${parseFloat(p.dl)+1.2}s ease-in-out infinite`,
         }}>
           <svg width="100%" height="100%" viewBox="0 0 80 100" preserveAspectRatio="none">
@@ -879,39 +1215,31 @@ const CinematicIntro = ({ gold = "#c9a84c", goldLight = "#e8c97a", onComplete })
             ))}
             <text x={p.textX} y="50%" textAnchor="middle" dominantBaseline="middle"
               fill={G} fillOpacity=".18" fontSize="7" fontFamily="'DM Mono',monospace"
-              letterSpacing="3" writingMode="vertical-rl" textRendering="geometricPrecision">
-              {p.label}
-            </text>
+              letterSpacing="3" writingMode="vertical-rl" textRendering="geometricPrecision">{p.label}</text>
           </svg>
         </div>
       ))}
 
-      {/* ── Corner accents ── */}
+      {/* Corner accents */}
       {[
-        { top:"20px",    left:"20px",   bt:"top",    bl:"left",  cx:"6px",  cy:"6px"  },
-        { top:"20px",    right:"20px",  bt:"top",    bl:"right", cx:"-6px", cy:"6px"  },
-        { bottom:"20px", left:"20px",   bt:"bottom", bl:"left",  cx:"6px",  cy:"-6px" },
-        { bottom:"20px", right:"20px",  bt:"bottom", bl:"right", cx:"-6px", cy:"-6px" },
+        {top:"20px",left:"20px",bt:"top",bl:"left",cx:"6px",cy:"6px"},
+        {top:"20px",right:"20px",bt:"top",bl:"right",cx:"-6px",cy:"6px"},
+        {bottom:"20px",left:"20px",bt:"bottom",bl:"left",cx:"6px",cy:"-6px"},
+        {bottom:"20px",right:"20px",bt:"bottom",bl:"right",cx:"-6px",cy:"-6px"},
       ].map((c,i)=>(
         <div key={i} aria-hidden="true" style={{
           position:"absolute",...c,width:40,height:40,
           borderStyle:"solid",borderColor:`${G}70`,borderWidth:0,
           [`border${c.bt.charAt(0).toUpperCase()+c.bt.slice(1)}Width`]:"1.5px",
           [`border${c.bl.charAt(0).toUpperCase()+c.bl.slice(1)}Width`]:"1.5px",
-          "--ci-cx":c.cx,"--ci-cy":c.cy,
-          opacity:0,
+          "--ci-cx":c.cx,"--ci-cy":c.cy,opacity:0,
           animation:`ci-cornerSlide 0.7s ${(0.3+i*0.1).toFixed(1)}s cubic-bezier(0.34,1.2,0.64,1) both, ci-cornerPulse 3.5s ${(1.8+i*0.4).toFixed(1)}s ease-in-out infinite`,
         }}>
-          <div style={{
-            position:"absolute",
-            ...(c.bt==="top"?{bottom:4}:{top:4}),
-            ...(c.bl==="left"?{right:4}:{left:4}),
-            width:4,height:4,background:G,opacity:.6,transform:"rotate(45deg)",
-          }}/>
+          <div style={{position:"absolute",...(c.bt==="top"?{bottom:4}:{top:4}),...(c.bl==="left"?{right:4}:{left:4}),width:4,height:4,background:G,opacity:.6,transform:"rotate(45deg)"}}/>
         </div>
       ))}
 
-      {/* ── Rising embers ── */}
+      {/* Rising embers */}
       <div aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden"}}>
         {EMBERS.map((e,i)=>(
           <div key={i} style={{
@@ -928,45 +1256,29 @@ const CinematicIntro = ({ gold = "#c9a84c", goldLight = "#e8c97a", onComplete })
         ))}
       </div>
 
-      {/* ── Astronomical mandala ── */}
-      <div aria-hidden="true" style={{
-        position:"absolute",inset:0,
-        display:"flex",alignItems:"center",justifyContent:"center",
-        pointerEvents:"none",
-      }}>
+      {/* Astronomical mandala */}
+      <div aria-hidden="true" style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
         <svg viewBox="0 0 800 800" style={{width:"min(96vw,96vh)",height:"min(96vw,96vh)",overflow:"visible"}}>
           <defs>
             <radialGradient id="ci-glow1" cx="50%" cy="50%" r="50%">
-              <stop offset="0%"   stopColor={G}  stopOpacity=".40"/>
-              <stop offset="55%"  stopColor={G}  stopOpacity=".08"/>
-              <stop offset="100%" stopColor={G}  stopOpacity="0"/>
+              <stop offset="0%" stopColor={G} stopOpacity=".40"/><stop offset="55%" stopColor={G} stopOpacity=".08"/><stop offset="100%" stopColor={G} stopOpacity="0"/>
             </radialGradient>
             <radialGradient id="ci-glow2" cx="50%" cy="50%" r="50%">
-              <stop offset="0%"   stopColor={GL} stopOpacity=".55"/>
-              <stop offset="60%"  stopColor={G}  stopOpacity=".12"/>
-              <stop offset="100%" stopColor={G}  stopOpacity="0"/>
+              <stop offset="0%" stopColor={GL} stopOpacity=".55"/><stop offset="60%" stopColor={G} stopOpacity=".12"/><stop offset="100%" stopColor={G} stopOpacity="0"/>
             </radialGradient>
             <filter id="ci-gfBlur"><feGaussianBlur stdDeviation="3"/></filter>
           </defs>
-
           <circle cx="400" cy="400" r="260" fill="url(#ci-glow1)"/>
           <circle cx="400" cy="400" r="100" fill="url(#ci-glow2)" style={{animation:"ci-nebula 4.5s ease-in-out infinite"}}/>
-
-          {/* Outer CW rotating group */}
           <g style={{transformOrigin:"400px 400px",animation:"ci-spinCW 110s linear infinite",willChange:"transform"}}>
             {M_RINGS.map((ring,i)=>(
-              <circle key={i} cx="400" cy="400" r={ring.r}
-                fill="none" stroke={G} strokeWidth={ring.sw}
-                strokeDasharray={ring.sd ? ring.sd : `${ring.perim} ${ring.perim}`}
-                strokeDashoffset={ring.perim}
-                style={{"--ci-perim":ring.perim,"--ci-rop":ring.rop,animation:`ci-ringDraw ${ring.dur} ${ring.dl} cubic-bezier(0.16,1,0.3,1) both`}}
-              />
+              <circle key={i} cx="400" cy="400" r={ring.r} fill="none" stroke={G} strokeWidth={ring.sw}
+                strokeDasharray={ring.sd ? ring.sd : `${ring.perim} ${ring.perim}`} strokeDashoffset={ring.perim}
+                style={{"--ci-perim":ring.perim,"--ci-rop":ring.rop,animation:`ci-ringDraw ${ring.dur} ${ring.dl} cubic-bezier(0.16,1,0.3,1) both`}}/>
             ))}
             {M_TICKS.map((tk,i)=>(
-              <line key={i} x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2}
-                stroke={G} strokeWidth={tk.sw} strokeLinecap="round"
-                style={{transformOrigin:"400px 400px",opacity:0,"--ci-top":tk.op,animation:`ci-tickIn 0.45s ${tk.dl} cubic-bezier(0.16,1,0.3,1) both`}}
-              />
+              <line key={i} x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} stroke={G} strokeWidth={tk.sw} strokeLinecap="round"
+                style={{transformOrigin:"400px 400px",opacity:0,"--ci-top":tk.op,animation:`ci-tickIn 0.45s ${tk.dl} cubic-bezier(0.16,1,0.3,1) both`}}/>
             ))}
             {M_DIAMONDS.map((d,i)=>(
               <g key={i} transform={`translate(${d.cx},${d.cy}) rotate(${d.deg+45})`}
@@ -976,15 +1288,11 @@ const CinematicIntro = ({ gold = "#c9a84c", goldLight = "#e8c97a", onComplete })
               </g>
             ))}
           </g>
-
-          {/* Inner CCW rotating group */}
           <g style={{transformOrigin:"400px 400px",animation:"ci-spinCCW 70s linear infinite",willChange:"transform"}}>
             {M_SPOKES.map((sp,i)=>(
-              <line key={i} x1={sp.x1} y1={sp.y1} x2={sp.x2} y2={sp.y2}
-                stroke={G} strokeWidth={sp.sw}
+              <line key={i} x1={sp.x1} y1={sp.y1} x2={sp.x2} y2={sp.y2} stroke={G} strokeWidth={sp.sw}
                 strokeDasharray="320 320" strokeDashoffset="320"
-                style={{"--ci-sop":sp.op,animation:`ci-spokeDraw 1.4s ${sp.dl} cubic-bezier(0.16,1,0.3,1) both`}}
-              />
+                style={{"--ci-sop":sp.op,animation:`ci-spokeDraw 1.4s ${sp.dl} cubic-bezier(0.16,1,0.3,1) both`}}/>
             ))}
             <polygon points={Array.from({length:6},(_,i)=>{const a=(i/6)*2*Math.PI;return `${400+Math.cos(a)*155},${400+Math.sin(a)*155}`;}).join(" ")} fill="none" stroke={G} strokeWidth=".45" strokeOpacity=".14"/>
             <polygon points={Array.from({length:6},(_,i)=>{const a=(i/6)*2*Math.PI+Math.PI/6;return `${400+Math.cos(a)*155},${400+Math.sin(a)*155}`;}).join(" ")} fill="none" stroke={G} strokeWidth=".45" strokeOpacity=".12"/>
@@ -994,33 +1302,22 @@ const CinematicIntro = ({ gold = "#c9a84c", goldLight = "#e8c97a", onComplete })
                 style={{animation:`ci-nebula ${3+i*.3}s ${i*.2}s ease-in-out infinite`}}/>
             );})}
           </g>
-
-          {/* Slow tertiary ring */}
           <g style={{transformOrigin:"400px 400px",animation:"ci-spinCW 180s linear infinite",willChange:"transform"}}>
             <circle cx="400" cy="400" r="305" fill="none" stroke={G} strokeWidth=".3" strokeOpacity=".08" strokeDasharray="12 20"/>
           </g>
-
-          {/* Halo pulses */}
           {HALOS.map((h,i)=>(
             <circle key={i} cx="400" cy="400" r="90" fill="none" stroke={h.color} strokeWidth="1"
-              style={{transformOrigin:"400px 400px",animation:`ci-halo ${h.dur} ${h.delay} cubic-bezier(0.16,1,0.3,1) infinite`}}
-            />
+              style={{transformOrigin:"400px 400px",animation:`ci-halo ${h.dur} ${h.delay} cubic-bezier(0.16,1,0.3,1) infinite`}}/>
           ))}
-
-          {/* Central crest */}
           <g style={{animation:"ci-crestGlow 2.8s 2.2s ease-in-out infinite"}}>
-            <polygon
-              points="400,348 414,376 445,378 424,399 431,430 400,414 369,430 376,399 355,378 386,376"
+            <polygon points="400,348 414,376 445,378 424,399 431,430 400,414 369,430 376,399 355,378 386,376"
               fill="none" stroke={G} strokeWidth="1.6" strokeLinejoin="round"
               strokeDasharray="220 220" strokeDashoffset="220"
-              style={{animation:"ci-crestDraw 1.3s 1.8s cubic-bezier(0.16,1,0.3,1) both"}}
-            />
-            <polygon
-              points="400,362 409,380 430,382 415,396 419,417 400,406 381,417 385,396 370,382 391,380"
+              style={{animation:"ci-crestDraw 1.3s 1.8s cubic-bezier(0.16,1,0.3,1) both"}}/>
+            <polygon points="400,362 409,380 430,382 415,396 419,417 400,406 381,417 385,396 370,382 391,380"
               fill="none" stroke={GL} strokeWidth=".6" strokeLinejoin="round" strokeOpacity=".5"
               strokeDasharray="180 180" strokeDashoffset="180"
-              style={{animation:"ci-crestDraw 1.1s 2.1s cubic-bezier(0.16,1,0.3,1) both"}}
-            />
+              style={{animation:"ci-crestDraw 1.1s 2.1s cubic-bezier(0.16,1,0.3,1) both"}}/>
             <circle cx="400" cy="400" r="0" fill={G} fillOpacity="0" filter="url(#ci-gfBlur)"
               style={{animation:"ci-coreExpand 1.8s 1.9s cubic-bezier(0.16,1,0.3,1) both"}}/>
             <circle cx="400" cy="400" r="5" fill={GL} fillOpacity="0"
@@ -1029,48 +1326,36 @@ const CinematicIntro = ({ gold = "#c9a84c", goldLight = "#e8c97a", onComplete })
         </svg>
       </div>
 
-      {/* ── Light rays (rotating group) ── */}
-      <div aria-hidden="true" style={{
-        position:"absolute",inset:0,display:"flex",
-        alignItems:"center",justifyContent:"center",
-        animation:"ci-raySpin 40s 2.2s linear infinite",
-        pointerEvents:"none",
-      }}>
+      {/* Light rays */}
+      <div aria-hidden="true" style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",animation:"ci-raySpin 40s 2.2s linear infinite",pointerEvents:"none"}}>
         {RAYS.map((ray,i)=>(
           <div key={i} style={{
-            position:"absolute",width:"1.5px",height:ray.h,
-            transformOrigin:"50% 0%",transform:`rotate(${ray.deg})`,
+            position:"absolute",width:"1.5px",height:ray.h,transformOrigin:"50% 0%",transform:`rotate(${ray.deg})`,
             background:`linear-gradient(to bottom,${G}00 0%,${G}${Math.round(parseFloat(ray.op)*255).toString(16).padStart(2,"0")} 25%,${G}22 70%,${G}00 100%)`,
             "--ci-deg":ray.deg,"--ci-rayop":ray.op,
-            animation:`ci-ray 5.5s ${ray.dl} cubic-bezier(0.16,1,0.3,1) both`,
-            willChange:"opacity,transform",
+            animation:`ci-ray 5.5s ${ray.dl} cubic-bezier(0.16,1,0.3,1) both`,willChange:"opacity,transform",
           }}/>
         ))}
       </div>
 
-      {/* ── Orbital debris ── */}
+      {/* Orbital debris */}
       <div aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
         {DEBRIS.map((d,i)=>(
           <div key={i} style={{
-            position:"absolute",
-            width:`${d.sz}px`,height:`${d.sz}px`,
-            marginLeft:`-${parseFloat(d.sz)/2}px`,marginTop:`-${parseFloat(d.sz)/2}px`,
-            borderRadius:"50%",
+            position:"absolute",width:`${d.sz}px`,height:`${d.sz}px`,
+            marginLeft:`-${parseFloat(d.sz)/2}px`,marginTop:`-${parseFloat(d.sz)/2}px`,borderRadius:"50%",
             background:d.gold?`radial-gradient(circle,${GL} 0%,${G} 70%,transparent 100%)`:`rgba(201,168,76,0.6)`,
             boxShadow:`0 0 ${parseFloat(d.sz)*3}px ${G}66`,
             "--ci-tx":d.tx,"--ci-ty":d.ty,"--ci-op":d.op,
-            animation:`ci-debris ${d.dr}s ${d.dl}s cubic-bezier(0.16,1,0.3,1) infinite`,
-            willChange:"transform,opacity",
+            animation:`ci-debris ${d.dr}s ${d.dl}s cubic-bezier(0.16,1,0.3,1) infinite`,willChange:"transform,opacity",
           }}/>
         ))}
       </div>
 
-      {/* ── Main text block ── */}
-      <div style={{
-        position:"relative",zIndex:5,
-        textAlign:"center",pointerEvents:"none",
-        display:"flex",flexDirection:"column",alignItems:"center",
-        perspective:"900px",
+      {/* ══ MAIN TEXT BLOCK — phase-aware depth zoom wrapper ══ */}
+      <div style={{position:"relative",zIndex:6,textAlign:"center",pointerEvents:"none",display:"flex",flexDirection:"column",alignItems:"center",perspective:"900px",maxWidth:"clamp(300px,58vw,620px)",
+        animation: contentZoomAnim,
+        willChange:"transform",
       }}>
 
         {/* Pre-title ornament */}
@@ -1082,55 +1367,40 @@ const CinematicIntro = ({ gold = "#c9a84c", goldLight = "#e8c97a", onComplete })
           <div style={{width:40,height:".5px",background:`linear-gradient(to right,${G}88,transparent)`,animation:"ci-ruleGrow 0.8s 2.7s cubic-bezier(0.16,1,0.3,1) both",transformOrigin:"left"}}/>
         </div>
 
-        {/* AURUM letter-by-letter 3D drop */}
+        {/* AURUM letters — glow breathing evolves by phase */}
         <div style={{display:"flex",gap:"0.04em",lineHeight:1,position:"relative",marginBottom:2}}>
           {LETTERS.map((l,i)=>(
             <span key={i} style={{
               fontFamily:"'Cormorant Garamond',Georgia,serif",
-              fontSize:"clamp(64px,10vw,112px)",fontWeight:300,
-              color:G,letterSpacing:"0.08em",display:"inline-block",
+              fontSize:"clamp(60px,9vw,108px)",fontWeight:300,color:G,
+              letterSpacing:"0.08em",display:"inline-block",
               opacity:0,
               animation:`ci-letterDrop 1.0s ${l.dl} cubic-bezier(0.34,1.2,0.64,1) both`,
               willChange:"transform,opacity,filter",
-            }}>
-              {l.ch}
-            </span>
+            }}>{l.ch}</span>
           ))}
-          {/* Double shimmer sweep */}
+          {/* Phase 4: emphasis scale pulse on logo text */}
+          {isPhase(4) && (
+            <div style={{position:"absolute",inset:0,pointerEvents:"none",animation:"ci-emphasisScale 2.4s ease-in-out infinite"}}/>
+          )}
+          {/* Triple shimmer: 3.8s, 5.5s, 11.0s */}
           <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",borderRadius:2}}>
-            <div style={{
-              position:"absolute",inset:0,
-              background:`linear-gradient(105deg,transparent 15%,${GL}60 45%,rgba(255,240,180,.85) 50%,${GL}60 55%,transparent 85%)`,
-              animation:"ci-shimmer1 1.0s 3.8s cubic-bezier(0.16,1,0.3,1) both",
-              willChange:"transform",
-            }}/>
-            <div style={{
-              position:"absolute",inset:0,
-              background:`linear-gradient(105deg,transparent 20%,${GL}40 50%,transparent 80%)`,
-              animation:"ci-shimmer2 1.2s 5.5s cubic-bezier(0.16,1,0.3,1) both",
-              willChange:"transform",
-            }}/>
+            <div style={{position:"absolute",inset:0,background:`linear-gradient(105deg,transparent 15%,${GL}60 45%,rgba(255,240,180,.88) 50%,${GL}60 55%,transparent 85%)`,animation:"ci-shimmer1 1.0s 3.8s cubic-bezier(0.16,1,0.3,1) both",willChange:"transform"}}/>
+            <div style={{position:"absolute",inset:0,background:`linear-gradient(105deg,transparent 20%,${GL}40 50%,transparent 80%)`,animation:"ci-shimmer2 1.2s 5.5s cubic-bezier(0.16,1,0.3,1) both",willChange:"transform"}}/>
+            <div style={{position:"absolute",inset:0,background:`linear-gradient(105deg,transparent 18%,${GL}55 48%,rgba(255,246,200,.75) 50%,${GL}55 52%,transparent 82%)`,animation:"ci-shimmer3 1.0s 11.0s cubic-bezier(0.16,1,0.3,1) both",willChange:"transform"}}/>
           </div>
-          {/* Idle glow blur layer */}
-          <div style={{
-            position:"absolute",inset:0,pointerEvents:"none",
-            display:"flex",gap:"0.04em",letterSpacing:"0.08em",
-            fontFamily:"'Cormorant Garamond',Georgia,serif",
-            fontSize:"clamp(64px,10vw,112px)",fontWeight:300,
-            color:"transparent",filter:`blur(14px)`,opacity:.45,
-            animation:"ci-textGlow 3.2s 5.2s ease-in-out infinite",
+          {/* Phase-evolving logo glow */}
+          <div style={{position:"absolute",inset:0,pointerEvents:"none",display:"flex",gap:"0.04em",letterSpacing:"0.08em",fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:"clamp(60px,9vw,108px)",fontWeight:300,color:"transparent",filter:`blur(${cinematicPhase>=4?"18px":"12px"})`,opacity:cinematicPhase>=4?.65:.42,
+            animation: logoAnim,
+            willChange:"filter,transform,opacity",
+            transition:"opacity 2s cubic-bezier(0.16,1,0.3,1), filter 2s cubic-bezier(0.16,1,0.3,1)",
           }}>
             {["A","U","R","U","M"].map((ch,i)=><span key={i} style={{color:G}}>{ch}</span>)}
           </div>
         </div>
 
-        {/* Horizontal ornamental rules */}
-        <div style={{
-          display:"flex",alignItems:"center",gap:12,
-          width:"clamp(200px,40vw,440px)",
-          marginTop:8,marginBottom:14,
-          opacity:0,animation:"ci-panelIn 0.6s 3.6s cubic-bezier(0.16,1,0.3,1) both",
-        }}>
+        {/* Ornamental rules */}
+        <div style={{display:"flex",alignItems:"center",gap:12,width:"clamp(200px,40vw,440px)",marginTop:8,marginBottom:14,opacity:0,animation:"ci-panelIn 0.6s 3.6s cubic-bezier(0.16,1,0.3,1) both"}}>
           <div style={{flex:1,height:".5px",background:`linear-gradient(to left,${G}66,transparent)`,transformOrigin:"right",animation:"ci-ruleGrow 0.9s 3.6s cubic-bezier(0.16,1,0.3,1) both"}}/>
           <svg width="12" height="12" viewBox="0 0 12 12" style={{flexShrink:0}}>
             <rect x="2" y="2" width="8" height="8" transform="rotate(45,6,6)" fill="none" stroke={G} strokeWidth="1" strokeOpacity=".8"/>
@@ -1139,91 +1409,97 @@ const CinematicIntro = ({ gold = "#c9a84c", goldLight = "#e8c97a", onComplete })
           <div style={{flex:1,height:".5px",background:`linear-gradient(to right,${G}66,transparent)`,transformOrigin:"left",animation:"ci-ruleGrow 0.9s 3.6s cubic-bezier(0.16,1,0.3,1) both"}}/>
         </div>
 
-        {/* Subtitle */}
-        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,letterSpacing:"0.45em",textTransform:"uppercase",color:G,marginBottom:16,opacity:0,animation:"ci-tagWipe 0.9s 4.0s cubic-bezier(0.16,1,0.3,1) both"}}>
-          Restaurant Group
-        </div>
-
-        {/* Italic tagline */}
-        <div style={{fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:"clamp(14px,2.2vw,18px)",fontStyle:"italic",fontWeight:300,color:`rgba(245,240,232,0.45)`,letterSpacing:"0.05em",marginBottom:22,opacity:0,animation:"ci-tagWipe 1.1s 4.4s cubic-bezier(0.16,1,0.3,1) both"}}>
-          Where every moment is crafted
-        </div>
+        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,letterSpacing:"0.45em",textTransform:"uppercase",color:G,marginBottom:14,opacity:0,animation:"ci-tagWipe 0.9s 4.0s cubic-bezier(0.16,1,0.3,1) both"}}>Restaurant Group</div>
+        <div style={{fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:"clamp(14px,2vw,18px)",fontStyle:"italic",fontWeight:300,color:`rgba(245,240,232,0.44)`,letterSpacing:"0.05em",marginBottom:20,opacity:0,animation:"ci-tagWipe 1.1s 4.4s cubic-bezier(0.16,1,0.3,1) both"}}>Where every moment is crafted</div>
 
         {/* Stars */}
-        <div style={{display:"flex",gap:14,marginBottom:26}}>
-          {["★","★","★"].map((s,i)=>(
+        <div style={{display:"flex",gap:14,marginBottom:20}}>
+          {["\u2605","\u2605","\u2605"].map((s,i)=>(
             <span key={i} style={{fontSize:18,color:G,opacity:0,textShadow:`0 0 12px ${G}99`,animation:`ci-starPop 0.7s ${(4.8+i*0.15).toFixed(2)}s cubic-bezier(0.34,1.2,0.64,1) both`}}>{s}</span>
           ))}
         </div>
 
-        {/* Stats row */}
-        <div style={{display:"flex",alignItems:"stretch",gap:0,borderTop:`1px solid ${G}22`,borderBottom:`1px solid ${G}22`,paddingTop:16,paddingBottom:16}}>
+        {/* Phase 3 — Animated prestige counters */}
+        <div style={{display:"flex",alignItems:"stretch",gap:0,borderTop:`1px solid ${G}22`,borderBottom:`1px solid ${G}22`,paddingTop:14,paddingBottom:14,marginBottom:20,width:"100%"}}>
           {STATS.map((st,i)=>(
-            <div key={i} style={{
-              display:"flex",flexDirection:"column",alignItems:"center",
-              padding:"0 clamp(18px,3vw,36px)",
-              borderRight:i < STATS.length-1?`1px solid ${G}22`:"none",
-              opacity:0,
-              animation:`ci-statPop 0.65s ${(5.0+i*0.12).toFixed(2)}s cubic-bezier(0.34,1.2,0.64,1) both`,
+            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",flex:1,borderRight:i<STATS.length-1?`1px solid ${G}22`:"none",opacity:0,
+              animation:`ci-counterIn 0.65s ${(5.0+i*0.12).toFixed(2)}s cubic-bezier(0.34,1.2,0.64,1) both`,
             }}>
-              <div style={{fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:"clamp(20px,3vw,28px)",fontWeight:500,color:G,lineHeight:1,textShadow:`0 0 16px ${G}55`}}>{st.num}</div>
+              <div style={{fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:"clamp(20px,3vw,28px)",fontWeight:500,color:G,lineHeight:1,
+                animation: isPhase(3) ? `ci-counterGlow 2.8s ${i*0.4}s ease-in-out infinite` : "none",
+              }}>{st.num}</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,letterSpacing:"0.22em",color:`rgba(245,240,232,0.4)`,textTransform:"uppercase",marginTop:5}}>{st.label}</div>
             </div>
           ))}
         </div>
+
+        {/* ACT IV: Accolade badges (7.5s) */}
+        <div style={{width:"100%",display:"flex",flexDirection:"column",gap:7,marginBottom:20}}>
+          {ACCOLADES.map((a,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 14px",background:`linear-gradient(135deg,rgba(201,168,76,.06),rgba(201,168,76,.02))`,borderRadius:8,border:`1px solid rgba(201,168,76,.14)`,opacity:0,animation:`ci-accoladeIn 0.7s ${(7.5+i*0.28).toFixed(2)}s cubic-bezier(0.16,1,0.3,1) both`}}>
+              <div style={{width:26,height:26,borderRadius:6,flexShrink:0,background:`linear-gradient(135deg,${G}28,${G}0a)`,border:`1px solid ${G}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:G,textShadow:`0 0 8px ${G}`}}>{a.icon}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:500,color:`rgba(245,240,232,.72)`,letterSpacing:".02em"}}>{a.label}</div>
+                <div style={{fontFamily:"'DM Mono',monospace",fontSize:8.5,color:G,opacity:.65,letterSpacing:".1em",marginTop:2}}>{a.sub}</div>
+              </div>
+              <div style={{width:5,height:5,borderRadius:"50%",background:G,flexShrink:0,opacity:0,animation:`ci-starPop 0.4s ${(8+i*0.28).toFixed(2)}s ease both, ci-corePulse 2.5s ${(8.5+i*0.4).toFixed(1)}s ease-in-out infinite`}}/>
+            </div>
+          ))}
+        </div>
+
+        {/* ACT IV: Philosophy quote (9.2s) */}
+        <div style={{width:"100%",padding:"14px 18px",marginBottom:20,background:`linear-gradient(135deg,rgba(201,168,76,.04),transparent)`,borderLeft:`2px solid ${G}44`,opacity:0,animation:"ci-quoteReveal 1.4s 9.2s cubic-bezier(0.16,1,0.3,1) both"}}>
+          <div style={{fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:"clamp(13px,1.8vw,17px)",fontStyle:"italic",fontWeight:300,color:`rgba(245,240,232,.38)`,letterSpacing:".05em",lineHeight:1.75}}>
+            "The art of hospitality is to make guests feel at home when you wish they were."
+          </div>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,letterSpacing:".25em",color:G,opacity:.5,marginTop:8,textTransform:"uppercase"}}>\u2014 Aurum Philosophy</div>
+        </div>
+
+        {/* ACT V: Legacy timeline (10.8s) */}
+        <div style={{width:"100%",opacity:0,animation:"ci-hudFade 0.8s 10.8s ease both"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+            <div style={{flex:1,height:".5px",background:`linear-gradient(to right,transparent,${G}44)`,transformOrigin:"left",animation:"ci-ruleGrow 0.8s 10.8s ease both"}}/>
+            <span style={{fontFamily:"'DM Mono',monospace",fontSize:8,letterSpacing:".32em",color:G,opacity:.55,textTransform:"uppercase"}}>Legacy</span>
+            <div style={{flex:1,height:".5px",background:`linear-gradient(to left,transparent,${G}44)`,transformOrigin:"right",animation:"ci-ruleGrow 0.8s 10.8s ease both"}}/>
+          </div>
+          <div style={{display:"flex",alignItems:"flex-start"}}>
+            {TIMELINE.map((item,i)=>(
+              <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",position:"relative"}}>
+                {i > 0 && <div style={{position:"absolute",right:"50%",top:4,left:"-50%",height:".5px",background:`rgba(201,168,76,.3)`,transformOrigin:"left",animation:`ci-ruleGrow 0.4s ${(11.1+i*0.15).toFixed(2)}s ease both`}}/>}
+                <div style={{width:8,height:8,borderRadius:"50%",zIndex:1,background:i===4?G:`rgba(201,168,76,.3)`,border:`1px solid ${G}66`,boxShadow:i===4?`0 0 10px ${G}`:"none",opacity:0,animation:`ci-timelineDot 0.5s ${(11.0+i*0.15).toFixed(2)}s cubic-bezier(0.34,1.2,0.64,1) both`}}/>
+                <div style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:G,opacity:.7,marginTop:6,letterSpacing:".1em"}}>{item.year}</div>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:7,color:`rgba(245,240,232,.4)`,marginTop:2,letterSpacing:".06em",textAlign:"center"}}>{item.event}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* ── HUD / Progress system ── */}
-      <div aria-hidden="true" style={{
-        position:"absolute",bottom:32,left:"8%",right:"8%",
-        display:"flex",flexDirection:"column",alignItems:"center",gap:10,
-        opacity:0,animation:"ci-hudFade 0.7s 3.6s ease both",
-        zIndex:6,
-      }}>
-        {/* Status dots + label */}
-        <div style={{display:"flex",alignItems:"center",gap:10,fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:"0.2em",color:`${G}80`,textTransform:"uppercase"}}>
-          <div style={{display:"flex",gap:5}}>
-            {[0,1,2].map(j=><div key={j} style={{width:5,height:5,borderRadius:"50%",background:G,animation:`ci-dotBlink 1.6s ${j*0.28}s ease-in-out infinite`}}/>)}
-          </div>
+      {/* HUD / Progress */}
+      <div aria-hidden="true" style={{position:"absolute",bottom:28,left:"8%",right:"8%",display:"flex",flexDirection:"column",alignItems:"center",gap:10,opacity:0,animation:"ci-hudFade 0.7s 3.6s ease both",zIndex:6}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:".2em",color:`${G}80`,textTransform:"uppercase"}}>
+          <div style={{display:"flex",gap:5}}>{[0,1,2].map(j=><div key={j} style={{width:5,height:5,borderRadius:"50%",background:G,animation:`ci-dotBlink 1.6s ${j*0.28}s ease-in-out infinite`}}/>)}</div>
           <span>Initializing Secure Session</span>
-          <div style={{display:"flex",gap:5}}>
-            {[0,1,2].map(j=><div key={j} style={{width:5,height:5,borderRadius:"50%",background:G,animation:`ci-dotBlink 1.6s ${(2-j)*0.28}s ease-in-out infinite`}}/>)}
-          </div>
+          <div style={{display:"flex",gap:5}}>{[0,1,2].map(j=><div key={j} style={{width:5,height:5,borderRadius:"50%",background:G,animation:`ci-dotBlink 1.6s ${(2-j)*0.28}s ease-in-out infinite`}}/>)}</div>
         </div>
-        {/* Progress track */}
-        <div style={{width:"100%",height:1.5,background:`rgba(201,168,76,.1)`,borderRadius:1,overflow:"hidden",position:"relative"}}>
-          <div style={{
-            height:"100%",
-            background:`linear-gradient(to right,${G}88,${GL},${G}88)`,
-            borderRadius:1,
-            animation:"ci-progress 8.2s 0.8s cubic-bezier(0.16,1,0.3,1) both, ci-progressGlow 2s 1.5s ease-in-out infinite",
-            willChange:"width",
-          }}/>
+        <div style={{width:"100%",height:1.5,background:`rgba(201,168,76,.1)`,borderRadius:1,overflow:"hidden"}}>
+          <div style={{height:"100%",background:`linear-gradient(to right,${G}88,${GL},${G}88)`,borderRadius:1,animation:"ci-progress 13.5s 0.8s cubic-bezier(0.16,1,0.3,1) both, ci-progressGlow 2s 1.5s ease-in-out infinite",willChange:"width"}}/>
         </div>
-        {/* Caption */}
-        <div style={{display:"flex",alignItems:"center",gap:16,fontFamily:"'DM Sans',sans-serif",fontSize:9,letterSpacing:"0.25em",color:`${G}44`,textTransform:"uppercase"}}>
-          <span>Est. MMXIV</span>
-          <div style={{width:3,height:3,background:G,opacity:.3,transform:"rotate(45deg)"}}/>
-          <span>Three Michelin Stars</span>
-          <div style={{width:3,height:3,background:G,opacity:.3,transform:"rotate(45deg)"}}/>
+        <div style={{display:"flex",alignItems:"center",gap:16,fontFamily:"'DM Sans',sans-serif",fontSize:9,letterSpacing:".25em",color:`${G}44`,textTransform:"uppercase"}}>
+          <span>Est. MMXIV</span><div style={{width:3,height:3,background:G,opacity:.3,transform:"rotate(45deg)"}}/>
+          <span>Three Michelin Stars</span><div style={{width:3,height:3,background:G,opacity:.3,transform:"rotate(45deg)"}}/>
           <span>40+ Venues</span>
         </div>
       </div>
 
-      {/* ── Golden flash on exit ── */}
+      {/* Golden flash */}
       {flashOn && (
-        <div aria-hidden="true" style={{
-          position:"absolute",inset:0,
-          background:`radial-gradient(ellipse 60% 60% at 50% 50%,${GL} 0%,${G}cc 30%,${G}22 65%,transparent 100%)`,
-          animation:"ci-flash 0.8s cubic-bezier(0.16,1,0.3,1) both",
-          pointerEvents:"none",zIndex:10,
-        }}/>
+        <div aria-hidden="true" style={{position:"absolute",inset:0,background:`radial-gradient(ellipse 60% 60% at 50% 50%,${GL} 0%,${G}cc 30%,${G}22 65%,transparent 100%)`,animation:"ci-flash 1.0s cubic-bezier(0.16,1,0.3,1) both",pointerEvents:"none",zIndex:10}}/>
       )}
     </div>
   );
 };
 
-// ─────────────────────────────────────────────────────────────
 // BACKGROUND LAYERS
 // ─────────────────────────────────────────────────────────────
 
@@ -1912,7 +2188,7 @@ const InputField = ({ id, label, type, value, onChange, error, t, suffix, autoCo
       <div style={{ position:"relative", animation:showError?"au-shake .42s var(--ease-out)":"none" }} onClick={fire}>
         <label htmlFor={id} style={{ position:"absolute", left:16, zIndex:2, top:floating?10:"50%", transform:floating?"none":"translateY(-50%)", fontSize:floating?10:14, letterSpacing:floating?"0.16em":"0.01em", textTransform:floating?"uppercase":"none", color:focused?t.gold:showError?t.error:t.textMuted, fontWeight:500, fontFamily:"'DM Sans',sans-serif", pointerEvents:"none", transition:`all var(--motion-fast) var(--ease-luxury)` }}>{label}</label>
         <input id={id} type={type} value={value} onChange={onChange} onFocus={handleFocus} onBlur={handleBlur} autoComplete={autoComplete} aria-invalid={showError?"true":"false"} aria-describedby={showError?`${id}-error`:undefined}
-          style={{ width:"100%", height:60, paddingTop:22, paddingBottom:8, paddingLeft:16, paddingRight:suffix?56:16, background:focused?t.bgInputFocus:t.bgInput, border:`1px solid ${showError?t.borderError:focused?t.borderFocus:t.border}`, borderRadius:12, color:t.textPrimary, fontSize:14, fontFamily:"'DM Sans',sans-serif", outline:"none", transition:`all var(--motion-fast) var(--ease-luxury)`, boxShadow:focused?t.shadowGold:showError?`0 0 0 2px ${t.borderError}22`:"none", backdropFilter:"blur(12px)" }}
+          style={{ width:"100%", height:60, paddingTop:22, paddingBottom:8, paddingLeft:16, paddingRight:suffix?56:16, background:focused?t.bgInputFocus:t.bgInput, border:`1px solid ${showError?t.borderError:focused?t.borderFocus:t.border}`, borderRadius:12, color:t.textPrimary, fontSize:14, fontFamily:"'DM Sans',sans-serif", outline:"none", transition:`all var(--motion-fast) var(--ease-luxury)`, boxShadow:focused?t.shadowGold:showError?`0 0 0 2px ${t.borderError}22`:"none", animation:focused?"lp-inputGlowPulse 2.5s ease-in-out infinite":"none", backdropFilter:"blur(12px)" }}
         />
         {/* Animated underline */}
         <div aria-hidden="true" style={{ position:"absolute", bottom:0, left:14, right:14, height:1.5, borderRadius:"0 0 1px 1px", background:`linear-gradient(90deg,${t.gold},${t.goldLight},${t.gold})`, transform:`scaleX(${focused?1:0})`, transformOrigin:"left", transition:`transform var(--motion-fast) var(--ease-luxury)` }}/>
@@ -1944,36 +2220,435 @@ const InputField = ({ id, label, type, value, onChange, error, t, suffix, autoCo
 // ─────────────────────────────────────────────────────────────
 
 const SuccessScreen = ({ t, onReset }) => {
-  const confetti = useMemo(() => Array.from({ length: 36 }, (_, i) => {
-    const angle = (i/36)*360 + (Math.random()-.5)*18;
-    const dist  = 60 + Math.random()*130;
-    const rad   = angle*Math.PI/180;
-    return { id:i, cx:`${Math.cos(rad)*dist}px`, cy:`${Math.sin(rad)*dist}px`, cr:`${Math.random()*680-340}deg`, color:i%3===0?t.gold:i%3===1?"rgba(255,255,255,0.45)":t.goldLight, size:Math.random()*6+2, round:Math.random()>.38, dur:.55+Math.random()*.65, delay:Math.random()*.35 };
-  }), [t.gold, t.goldLight]);
+  const confetti = useMemo(() => {
+    return Array.from({ length: 36 }, (_, i) => {
+      const angle = (i / 36) * 360 + (Math.random() - 0.5) * 18;
+      const dist = 60 + Math.random() * 130;
+      const rad = (angle * Math.PI) / 180;
+
+      return {
+        id: i,
+        cx: `${Math.cos(rad) * dist}px`,
+        cy: `${Math.sin(rad) * dist}px`,
+        cr: `${Math.random() * 680 - 340}deg`,
+        color:
+          i % 3 === 0
+            ? t.gold
+            : i % 3 === 1
+            ? "rgba(255,255,255,0.45)"
+            : t.goldLight,
+        size: Math.random() * 6 + 2,
+        round: Math.random() > 0.38,
+        dur: 0.55 + Math.random() * 0.65,
+        delay: Math.random() * 0.35
+      };
+    });
+  }, [t.gold, t.goldLight]);
+
   return (
-    <div role="status" aria-live="polite" aria-label="Login successful" style={{ textAlign:"center", animation:"au-scaleIn .8s var(--ease-spring-sm) both", position:"relative" }}>
-      <div aria-hidden="true" style={{ position:"absolute", top:"25%", left:"50%", pointerEvents:"none", zIndex:10 }}>
-        {confetti.map(p=><div key={p.id} style={{ position:"absolute", width:p.size, height:p.size, borderRadius:p.round?"50%":2, background:p.color, "--cx":p.cx,"--cy":p.cy,"--cr":p.cr, animation:`au-confetti ${p.dur}s ${p.delay}s var(--ease-out) forwards`, willChange:"transform,opacity" }}/>)}
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Login successful"
+      style={{
+        textAlign: "center",
+        position: "relative",
+        animation:
+          "lp-cardIn 1.0s .06s cubic-bezier(0.16,1,0.3,1) both"
+      }}
+    >
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          pointerEvents: "none",
+          zIndex: 10
+        }}
+      >
+        {confetti.map((p) => (
+          <div
+            key={p.id}
+            style={{
+              position: "absolute",
+              width: p.size,
+              height: p.size,
+              borderRadius: p.round ? "50%" : 2,
+              background: p.color,
+              "--cx": p.cx,
+              "--cy": p.cy,
+              "--cr": p.cr,
+              animation: `au-confetti ${p.dur}s ${p.delay}s var(--ease-out) forwards`,
+              willChange: "transform, opacity",
+              transform: "translateZ(0)"
+            }}
+          />
+        ))}
       </div>
-      <div style={{ width:80, height:80, borderRadius:"50%", background:t.successBg, border:`1.5px solid ${t.success}55`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 24px", boxShadow:`0 0 48px ${t.success}22`, animation:"au-checkBounce .75s var(--ease-spring-sm) both", position:"relative", zIndex:1 }}>
-        <svg width="32" height="26" viewBox="0 0 32 26" fill="none" aria-hidden="true">
-          <path d="M2 13L11 22L30 2" stroke={t.success} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="80" style={{ animation:"au-checkDraw .65s .3s var(--ease-luxury) both" }}/>
+
+      <div
+        style={{
+          width: 80,
+          height: 80,
+          borderRadius: "50%",
+          background: t.successBg,
+          border: `1.5px solid ${t.success}55`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "0 auto 24px",
+          boxShadow: `0 0 48px ${t.success}22, inset 0 1px 0 rgba(255,255,255,0.25)`,
+          animation: "au-checkBounce .75s var(--ease-spring-sm) both",
+          position: "relative",
+          zIndex: 1
+        }}
+      >
+        <svg
+          width="32"
+          height="26"
+          viewBox="0 0 32 26"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M2 13L11 22L30 2"
+            stroke={t.success}
+            strokeWidth="2.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray="80"
+            style={{
+              animation:
+                "au-checkDraw .65s .3s var(--ease-luxury) both"
+            }}
+          />
         </svg>
       </div>
-      <h3 className="au-font-display" style={{ fontSize:30, fontWeight:400, color:t.textPrimary, marginBottom:10, letterSpacing:"-0.01em" }}>Welcome to Aurum</h3>
-      <p style={{ fontSize:14, color:t.textSecondary, lineHeight:1.68, marginBottom:28, fontFamily:"'DM Sans',sans-serif" }}>Your table is being prepared.<br/>Redirecting you now.</p>
-      <div style={{ display:"flex", gap:6, justifyContent:"center", marginBottom:28 }} aria-hidden="true">
-        {[0,1,2].map(i=><div key={i} style={{ width:6, height:6, borderRadius:"50%", background:t.gold, animation:`au-pulseDot 1.2s ${i*.22}s ease-in-out infinite` }}/>)}
+
+      <h3
+        className="au-font-display"
+        style={{
+          fontSize: 30,
+          fontWeight: 400,
+          color: t.textPrimary,
+          marginBottom: 10,
+          letterSpacing: "-0.01em"
+        }}
+      >
+        Welcome to Aurum
+      </h3>
+
+      <p
+        style={{
+          fontSize: 14,
+          color: t.textSecondary,
+          lineHeight: 1.68,
+          marginBottom: 28,
+          fontFamily: "'DM Sans',sans-serif"
+        }}
+      >
+        Your table is being prepared.
+        <br />
+        Redirecting you now.
+      </p>
+
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          justifyContent: "center",
+          marginBottom: 28
+        }}
+        aria-hidden="true"
+      >
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: t.gold,
+              animation: `au-pulseDot 1.2s ${i * 0.22}s ease-in-out infinite`
+            }}
+          />
+        ))}
       </div>
-      <button onClick={onReset} className="au-focus-ring" style={{ background:"none", border:`1px solid ${t.border}`, borderRadius:10, padding:"11px 22px", color:t.textSecondary, fontSize:12, letterSpacing:"0.1em", fontFamily:"'DM Sans',sans-serif", cursor:"pointer", transition:`all var(--motion-fast) var(--ease-luxury)` }}
-        onMouseEnter={e=>{e.currentTarget.style.borderColor=t.gold+"60";e.currentTarget.style.color=t.gold;e.currentTarget.style.transform="translateY(-2px)";}}
-        onMouseLeave={e=>{e.currentTarget.style.borderColor=t.border;e.currentTarget.style.color=t.textSecondary;e.currentTarget.style.transform="none";}}
-      >← Return to Login</button>
+
+      <button
+        onClick={onReset}
+        className="au-focus-ring"
+        style={{
+          background: "none",
+          border: `1px solid ${t.border}`,
+          borderRadius: 10,
+          padding: "11px 22px",
+          color: t.textSecondary,
+          fontSize: 12,
+          letterSpacing: "0.1em",
+          fontFamily: "'DM Sans',sans-serif",
+          cursor: "pointer",
+          transition:
+            "all var(--motion-fast) var(--ease-luxury)"
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = t.gold + "60";
+          e.currentTarget.style.color = t.gold;
+          e.currentTarget.style.transform = "translateY(-2px)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = t.border;
+          e.currentTarget.style.color = t.textSecondary;
+          e.currentTarget.style.transform = "none";
+        }}
+      >
+        ← Return to Login
+      </button>
     </div>
   );
 };
 
 // ─────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────
+// LOGIN PAGE — ambient animation system
+// ─────────────────────────────────────────────────────────────
+
+/** 48 rising dust motes behind the login card */
+const LP_DUST = Array.from({ length: 48 }, (_, i) => {
+  const [rx, ry, rw, ro, rd, rdl, rvx, rvy, rvx2, rvy2] = lcg(i * 8191 + 4099, 10);
+  return {
+    left:   `${(rx * 92 + 4).toFixed(1)}%`,
+    bottom: `${(ry * 50 + 5).toFixed(1)}%`,
+    sz:  (0.8 + rw * 1.6).toFixed(1),
+    op:  (0.1 + ro * 0.25).toFixed(2),
+    vy:  `-${(55 + rd * 120).toFixed(0)}px`,
+    vy2: `-${(90 + rd * 190).toFixed(0)}px`,
+    vx:  `${((rvx - 0.5) * 28).toFixed(1)}px`,
+    vx2: `${((rvx2 - 0.5) * 20).toFixed(1)}px`,
+    dl:  (rdl * 12.0).toFixed(2),
+    dr:  (5.0 + rw * 8.0).toFixed(2),
+    gold: i % 6 === 0,
+  };
+});
+
+/** 16 diagonal light streaks */
+const LP_STREAKS = Array.from({ length: 16 }, (_, i) => {
+  const [rx, rop, rdl, rdr] = lcg(i * 6271 + 2053, 4);
+  return {
+    left: `${(rx * 110 - 10).toFixed(1)}%`,
+    op:   (0.012 + rop * 0.018).toFixed(3),
+    dl:   (rdl * 20).toFixed(2),
+    dr:   (14 + rdr * 16).toFixed(2),
+    deg:  `${(36 + (i % 5) * 4).toFixed(1)}deg`,
+    w:    `${(100 + rop * 200).toFixed(0)}px`,
+  };
+});
+
+/** Ambient rising dust particles on the right panel */
+const LoginAmbientDust = ({ t, ready }) => {
+  if (!ready) return null;
+  const G = t.gold, GL = t.goldLight;
+  return (
+    <div aria-hidden="true" style={{ position:"absolute", inset:0, overflow:"hidden", pointerEvents:"none", zIndex:0 }}>
+      {LP_STREAKS.map((s,i)=>(
+        <div key={i} style={{
+          position:"absolute", left:s.left, top:0, bottom:0, width:s.w,
+          background:`linear-gradient(${s.deg},transparent 0%,${G} 50%,transparent 100%)`,
+          opacity:0, "--lp-sop":s.op, "--lp-sr":s.deg,
+          animation:`lp-bgStreak ${s.dr}s ${s.dl}s ease-in-out infinite`,
+          willChange:"transform,opacity",
+        }}/>
+      ))}
+      {LP_DUST.map((d,i)=>(
+        <div key={i} style={{
+          position:"absolute", left:d.left, bottom:d.bottom,
+          width:`${d.sz}px`, height:`${d.sz}px`, borderRadius:"50%",
+          background: d.gold
+            ? `radial-gradient(circle,${GL} 0%,${G} 65%,transparent 100%)`
+            : `radial-gradient(circle,rgba(201,168,76,.8) 0%,rgba(201,168,76,.4) 60%,transparent 100%)`,
+          boxShadow:`0 0 ${parseFloat(d.sz)*3}px ${d.gold ? G : G}66`,
+          "--lp-op":d.op,"--lp-vy":d.vy,"--lp-vy2":d.vy2,"--lp-vx":d.vx,"--lp-vx2":d.vx2,
+          animation:`lp-dustRise ${d.dr}s ${d.dl}s cubic-bezier(0.33,0,0.66,1) infinite`,
+          willChange:"transform,opacity",
+        }}/>
+      ))}
+      {/* Three micro-orbs */}
+      {[
+        {w:300,h:300,l:"10%",t:"18%",mx:"24px",my:"-38px",mx2:"-18px",my2:"28px",dur:"24s"},
+        {w:220,h:220,r:"8%",b:"22%",mx:"-28px",my:"22px",mx2:"16px",my2:"-24px",dur:"30s",dl:"7s"},
+        {w:180,h:180,l:"52%",t:"8%",mx:"18px",my:"-26px",mx2:"-12px",my2:"18px",dur:"20s",dl:"3s"},
+      ].map((o,i)=>(
+        <div key={i} style={{
+          position:"absolute", width:o.w, height:o.h, borderRadius:"50%",
+          left:o.l, right:o.r, top:o.t, bottom:o.b,
+          background:`radial-gradient(circle,${G}0c 0%,transparent 65%)`,
+          "--lp-mx":o.mx,"--lp-my":o.my,"--lp-mx2":o.mx2,"--lp-my2":o.my2,
+          animation:`lp-microOrb ${o.dur} ${o.dl||"0s"} ease-in-out infinite`,
+          willChange:"transform",
+        }}/>
+      ))}
+    </div>
+  );
+};
+
+/** Floating ornament diamonds around the login card */
+const CardFloatDiamonds = ({ t, ready }) => {
+  if (!ready) return null;
+  const G = t.gold;
+  const diamonds = [
+    { w:9,  h:9,  top:"-22px",   left:"22%",  anm:"lp-float1 5.5s 0.2s ease-in-out infinite", dlp:"lp-diamondPulse 4s 0.4s ease-in-out infinite" },
+    { w:6,  h:6,  top:"-16px",   right:"18%", anm:"lp-float2 7.0s 1.4s ease-in-out infinite", dlp:"lp-diamondPulse 5s 1.0s ease-in-out infinite" },
+    { w:5,  h:5,  bottom:"-17px",left:"35%",  anm:"lp-float1 6.2s 0.8s ease-in-out infinite", dlp:"lp-diamondPulse 6s 0.2s ease-in-out infinite" },
+    { w:7,  h:7,  bottom:"-19px",right:"27%", anm:"lp-float3 8.0s 2.2s ease-in-out infinite", dlp:"lp-diamondPulse 4.5s 2s ease-in-out infinite" },
+    { w:4,  h:4,  top:"28%",    left:"-14px", anm:"lp-float2 5.8s 3.0s ease-in-out infinite", dlp:"lp-diamondPulse 5.5s 1.5s ease-in-out infinite" },
+    { w:4,  h:4,  top:"55%",    right:"-12px",anm:"lp-float3 7.4s 0.5s ease-in-out infinite", dlp:"lp-diamondPulse 6s 0.8s ease-in-out infinite" },
+  ];
+  return (
+    <>
+      {diamonds.map((d,i)=>(
+        <div key={i} aria-hidden="true" style={{
+          position:"absolute",
+          top:d.top, bottom:d.bottom, left:d.left, right:d.right,
+          width:d.w, height:d.h, background:G, zIndex:5, pointerEvents:"none",
+          animation:`${d.anm}, ${d.dlp}`,
+          willChange:"transform,box-shadow",
+        }}/>
+      ))}
+    </>
+  );
+};
+
+/** Expanding halo rings around the card */
+const CardHaloRings = ({ t, ready }) => {
+  if (!ready) return null;
+  const G = t.gold;
+  return (
+    <div aria-hidden="true" style={{ position:"absolute", inset:0, pointerEvents:"none", overflow:"visible", zIndex:0 }}>
+      <div style={{ position:"absolute", left:"50%", top:"50%", width:"100%", height:"100%", borderRadius:22, border:`1px solid ${G}15`, animation:"lp-haloExpand  6.5s 0.8s ease-out infinite", willChange:"transform,opacity" }}/>
+      <div style={{ position:"absolute", left:"50%", top:"50%", width:"100%", height:"100%", borderRadius:22, border:`1px solid ${G}0c`, animation:"lp-haloExpand2 6.5s 2.2s ease-out infinite", willChange:"transform,opacity" }}/>
+      <div style={{ position:"absolute", left:"50%", top:"50%", width:"100%", height:"100%", borderRadius:22, border:`1px solid ${G}09`, animation:"lp-haloExpand  6.5s 4.0s ease-out infinite", willChange:"transform,opacity" }}/>
+    </div>
+  );
+};
+
+/** Animated gold divider between header and form */
+const FormDivider = ({ t, delay = 0 }) => {
+  const G = t.gold;
+  return (
+    <div aria-hidden="true" style={{ position:"relative", height:1, margin:"0 0 22px" }}>
+      <div style={{
+        position:"absolute", left:0, right:0, top:"50%", height:".5px",
+        background:`linear-gradient(to right,transparent,${G}55 20%,${G}88 50%,${G}55 80%,transparent)`,
+        transform:"scaleX(0) translateY(-50%)", transformOrigin:"center",
+        animation:`lp-dividerIn 1.0s ${delay}ms cubic-bezier(0.16,1,0.3,1) both`,
+      }}/>
+      <div style={{
+        position:"absolute", left:"50%", top:"50%",
+        width:4, height:4, marginLeft:-2, marginTop:-2,
+        background:G, transform:"rotate(45deg)",
+        animation:`lp-dividerDot 3.5s ${delay+400}ms ease-in-out infinite`,
+        boxShadow:`0 0 6px ${G}88`,
+      }}/>
+    </div>
+  );
+};
+
+/** Submit button with orbital energy field */
+const EnhancedSubmitButton = ({ t, isDark, isLoading, btnHover, setBtnHover, fireBtn, BtnRipples, ready }) => {
+  const G = t.gold, GL = t.goldLight;
+  const D = d => ready ? { opacity:1, animation:`au-fadeUp var(--motion-entrance) ${d}ms var(--ease-luxury) both` } : { opacity:0 };
+
+  const orbits = [
+    { r:"30px", speed:"2.2s", op:.65, sz:3,   col:G  },
+    { r:"40px", speed:"3.3s", op:.42, sz:2.5, col:GL },
+    { r:"24px", speed:"1.8s", op:.32, sz:2,   col:G  },
+  ];
+
+  return (
+    <div style={{ ...D(600), position:"relative" }}>
+      {/* Orbital dots (idle) */}
+      {!isLoading && (
+        <div aria-hidden="true" style={{ position:"absolute", inset:-20, pointerEvents:"none", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          {orbits.map((o,i)=>(
+            <div key={i} style={{ position:"absolute", width:0, height:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <div style={{
+                position:"absolute",
+                width:`${o.sz}px`, height:`${o.sz}px`, borderRadius:"50%",
+                background:o.col,
+                boxShadow:`0 0 ${o.sz*3}px ${o.col}`,
+                opacity: btnHover ? o.op * 1.6 : o.op * 0.4,
+                "--lp-r": o.r,
+                animation:`lp-btnOrbit ${o.speed} ${i * 0.6}s linear infinite`,
+                transition:"opacity 0.3s ease",
+                willChange:"transform",
+              }}/>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && !btnHover && (
+        <div aria-hidden="true" style={{ position:"absolute", inset:0, borderRadius:12, animation:"lp-btnBreath 4s 2.5s ease-in-out infinite", pointerEvents:"none" }}/>
+      )}
+
+      <button type="submit" disabled={isLoading} className="au-focus-ring"
+        aria-label={isLoading ? "Authenticating, please wait" : "Sign in to Aurum"}
+        onMouseEnter={()=>setBtnHover(true)} onMouseLeave={()=>setBtnHover(false)}
+        onClick={e=>{if(!isLoading)fireBtn(e);}}
+        style={{
+          width:"100%", height:56,
+          background: isLoading ? t.goldDim : `linear-gradient(135deg,${G} 0%,${GL} 45%,${G} 72%,${GL} 100%)`,
+          backgroundSize:"280% 100%",
+          backgroundPosition: btnHover && !isLoading ? "100% 0" : "0 0",
+          border:"none", borderRadius:12,
+          color: isDark ? "#07070c" : "#ffffff",
+          fontSize:11, fontWeight:700, letterSpacing:"0.2em", textTransform:"uppercase",
+          fontFamily:"'DM Sans',sans-serif",
+          cursor: isLoading ? "not-allowed" : "pointer",
+          position:"relative", overflow:"hidden",
+          boxShadow: isLoading ? "none" : btnHover ? t.shadowBtnHover : t.shadowBtn,
+          transition:`all var(--motion-fast) var(--ease-luxury)`,
+          transform: isLoading ? "none" : btnHover ? "translateY(-3px) scale(1.012)" : "none",
+        }}
+      >
+        {!isLoading && btnHover && (
+          <>
+            <div aria-hidden="true" style={{ position:"absolute", inset:0, background:"linear-gradient(105deg,transparent 25%,rgba(255,255,255,.28) 50%,transparent 75%)", animation:"au-shimmer .65s var(--ease-luxury)", pointerEvents:"none" }}/>
+            <div aria-hidden="true" style={{ position:"absolute", inset:0, background:"linear-gradient(105deg,transparent 10%,rgba(255,255,255,.12) 45%,transparent 80%)", animation:"lp-btnGlint 1.2s 0.35s var(--ease-luxury)", pointerEvents:"none" }}/>
+          </>
+        )}
+        <BtnRipples/>
+        {isLoading ? (
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:12 }}>
+            <div style={{ position:"relative", width:22, height:22, flexShrink:0 }}>
+              <div style={{ position:"absolute", inset:0, borderRadius:"50%", border:`1.5px solid ${G}20` }}/>
+              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ width:4, height:4, borderRadius:"50%", background:G, animation:"rp-orbitDot .9s linear infinite", boxShadow:`0 0 6px ${G}` }}/>
+              </div>
+              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ width:3, height:3, borderRadius:"50%", background:GL, animation:"rp-orbitDot2 .9s linear infinite", opacity:.75 }}/>
+              </div>
+              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ width:2.5, height:2.5, borderRadius:"50%", background:G, animation:"rp-orbitDot3 .9s linear infinite", opacity:.55 }}/>
+              </div>
+              <div style={{ position:"absolute", inset:"8px", borderRadius:"50%", background:`radial-gradient(circle,${G}55,transparent)`, animation:"au-coreGlow 1.2s ease-in-out infinite" }}/>
+            </div>
+            <span style={{ color:G, letterSpacing:"0.14em" }}>Authenticating</span>
+          </div>
+        ) : (
+          <span style={{ display:"inline-flex", alignItems:"center", gap:8 }}>
+            Access Your Account
+            <ArrowRight size={16} strokeWidth={2} style={{ transform:btnHover?"translateX(4px)":"translateX(0)", transition:`transform var(--motion-fast) var(--ease-spring-sm)` }}/>
+          </span>
+        )}
+      </button>
+    </div>
+  );
+};
+
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────
 
@@ -2080,7 +2755,6 @@ export default function RestaurantLogin() {
       )}
 
     <div lang="en" dir="ltr" className="au-root au-shell" style={{ background:t.bg, opacity:themeOpacity }}>
-      <a href="#login-form" className="au-skip-link">Skip to login form</a>
 
       {/* Mobile: full-screen background */}
       {isMobile && (
@@ -2117,6 +2791,8 @@ export default function RestaurantLogin() {
         {!isMobile && (
           <RightPanelBackground t={t} isDark={isDark} mx={mouse.x} my={mouse.y}/>
         )}
+        {/* ── Ambient dust particles ── */}
+        {!isMobile && <LoginAmbientDust t={t} ready={ready}/>}
         {isMobile && (
           <div aria-hidden="true" style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0 }}>
             <CardAura t={t} isDark={isDark} mx={0} my={0}/>
@@ -2135,18 +2811,14 @@ export default function RestaurantLogin() {
         <div className="au-card" style={{
           position:"relative", zIndex:1,
           opacity: ready ? 1 : 0,
-          animation: ready ? "au-scaleIn .8s .08s var(--ease-luxury) both" : "none",
+          animation: ready ? "lp-cardIn 1.0s .06s cubic-bezier(0.16,1,0.3,1) both" : "none",
           marginTop: isMobile ? 8 : 0,
           perspective: "1200px",
         }}>
 
-          {/* Pulse rings — ambient halo rings */}
-          {!isLoading && !isSuccess && (
-            <div aria-hidden="true" className="rp-pulse-ring" style={{ position:"absolute", inset:0, pointerEvents:"none", overflow:"visible" }}>
-              <div style={{ position:"absolute", left:"50%", top:"50%", width:"100%", height:"100%", borderRadius:22, border:`1px solid ${t.gold}1a`, animation:"rp-pulseRing 5s 1.5s ease-out infinite", willChange:"transform,opacity" }}/>
-              <div style={{ position:"absolute", left:"50%", top:"50%", width:"100%", height:"100%", borderRadius:22, border:`1px solid ${t.gold}0e`, animation:"rp-pulseRing2 5s 3s ease-out infinite",   willChange:"transform,opacity" }}/>
-            </div>
-          )}
+          {/* Halo rings + floating diamonds */}
+          {!isLoading && !isSuccess && <CardHaloRings t={t} ready={ready}/>}
+          {!isLoading && !isSuccess && <CardFloatDiamonds t={t} ready={ready}/>}
 
           {/* Animated gold corner accents */}
           <div className="rp-card-corner tl" style={{ borderColor:`${t.gold}55` }}/>
@@ -2213,6 +2885,7 @@ export default function RestaurantLogin() {
 
                 {/* Form */}
                 <form id="login-form" onSubmit={handleSubmit} noValidate aria-label="Aurum login form">
+                  <FormDivider t={t} delay={300}/>
                   <div style={{ marginBottom:10 }}>
                     <InputField id="email" label="Email Address" type="email" value={email}
                       onChange={e=>{setEmail(e.target.value);setErrors(p=>({...p,email:""}));}}
@@ -2251,11 +2924,14 @@ export default function RestaurantLogin() {
                       </div>
                       <span style={{ fontSize:13, color:t.textSecondary, fontFamily:"'DM Sans',sans-serif" }}>Remember me</span>
                     </label>
-                    <a href="#forgot" className="au-focus-ring" onClick={e=>e.preventDefault()}
-                      style={{ fontSize:13, color:t.gold, textDecoration:"none", fontFamily:"'DM Sans',sans-serif", padding:"4px 2px", borderBottom:`1px solid ${t.gold}38`, transition:`all var(--motion-fast) var(--ease-luxury)` }}
+                    <button
+                      type="button"
+                      className="au-focus-ring"
+                      onClick={() => { /* navigate('/forgot-password') — wire to your route */ }}
+                      style={{ fontSize:13, color:t.gold, textDecoration:"none", background:"none", border:"none", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", padding:"4px 2px", borderBottom:`1px solid ${t.gold}38`, transition:`all var(--motion-fast) var(--ease-luxury)` }}
                       onMouseEnter={e=>{e.currentTarget.style.color=t.goldLight;e.currentTarget.style.borderBottomColor=t.goldLight+"60";}}
                       onMouseLeave={e=>{e.currentTarget.style.color=t.gold;e.currentTarget.style.borderBottomColor=t.gold+"38";}}
-                    >Forgot password?</a>
+                    >Forgot password?</button>
                   </div>
 
                   {isLoading && (
@@ -2265,51 +2941,21 @@ export default function RestaurantLogin() {
                   )}
 
                   {/* CTA */}
-                  <div style={{ ...D(600), position:"relative" }}>
-                    {!isLoading && !btnHover && (
-                      <div aria-hidden="true" style={{ position:"absolute", inset:0, borderRadius:12, animation:"rp-idlePulse 4s 2.5s ease-in-out infinite", pointerEvents:"none" }}/>
-                    )}
-                    <button type="submit" disabled={isLoading} className="au-focus-ring"
-                      aria-label={isLoading?"Authenticating, please wait":"Sign in to Aurum"}
-                      onMouseEnter={()=>setBtnHover(true)} onMouseLeave={()=>setBtnHover(false)}
-                      onClick={e=>{if(!isLoading)fireBtn(e);}}
-                      style={{ width:"100%", height:56, background:isLoading?t.goldDim:`linear-gradient(135deg,${t.gold} 0%,${t.goldLight} 45%,${t.gold} 72%,${t.goldLight} 100%)`, backgroundSize:"280% 100%", backgroundPosition:btnHover&&!isLoading?"100% 0":"0 0", border:"none", borderRadius:12, color:isDark?"#07070c":"#ffffff", fontSize:11, fontWeight:700, letterSpacing:"0.2em", textTransform:"uppercase", fontFamily:"'DM Sans',sans-serif", cursor:isLoading?"not-allowed":"pointer", position:"relative", overflow:"hidden", boxShadow:isLoading?"none":btnHover?t.shadowBtnHover:t.shadowBtn, transition:`all var(--motion-fast) var(--ease-luxury)`, transform:isLoading?"none":btnHover?"translateY(-3px) scale(1.012)":"none" }}
-                    >
-                      {!isLoading && btnHover && <div aria-hidden="true" style={{ position:"absolute", inset:0, background:"linear-gradient(105deg,transparent 30%,rgba(255,255,255,.26) 50%,transparent 70%)", animation:"au-shimmer .65s var(--ease-luxury)", pointerEvents:"none" }}/>}
-                      <BtnRipples/>
-                      {isLoading ? (
-                        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:12 }}>
-                          <div style={{ position:"relative", width:22, height:22, flexShrink:0 }}>
-                            <div style={{ position:"absolute", inset:0, borderRadius:"50%", border:`1.5px solid ${t.gold}20` }}/>
-                            <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <div style={{ width:4, height:4, borderRadius:"50%", background:t.gold, animation:"rp-orbitDot .9s linear infinite", boxShadow:`0 0 6px ${t.gold}` }}/>
-                            </div>
-                            <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <div style={{ width:3, height:3, borderRadius:"50%", background:t.goldLight, animation:"rp-orbitDot2 .9s linear infinite", opacity:.75 }}/>
-                            </div>
-                            <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <div style={{ width:2.5, height:2.5, borderRadius:"50%", background:t.gold, animation:"rp-orbitDot3 .9s linear infinite", opacity:.55 }}/>
-                            </div>
-                            <div style={{ position:"absolute", inset:"8px", borderRadius:"50%", background:`radial-gradient(circle,${t.gold}55,transparent)`, animation:"au-coreGlow 1.2s ease-in-out infinite" }}/>
-                          </div>
-                          <span style={{ color:t.gold, letterSpacing:"0.14em" }}>Authenticating</span>
-                        </div>
-                      ) : (
-                        <span style={{ display:"inline-flex", alignItems:"center", gap:8 }}>
-                          Access Your Account
-                          <ArrowRight size={16} strokeWidth={2} style={{ transform:btnHover?"translateX(4px)":"translateX(0)", transition:`transform var(--motion-fast) var(--ease-spring-sm)` }}/>
-                        </span>
-                      )}
-                    </button>
-                  </div>
+                  <EnhancedSubmitButton
+                    t={t} isDark={isDark} isLoading={isLoading}
+                    btnHover={btnHover} setBtnHover={setBtnHover}
+                    fireBtn={fireBtn} BtnRipples={BtnRipples} ready={ready}
+                  />
 
                   <div style={{ textAlign:"center", marginTop:24, ...D(700) }}>
                     <span style={{ fontSize:13, color:t.textMuted, fontFamily:"'DM Sans',sans-serif" }}>Not yet a member? </span>
-                    <a href="#request" className="au-focus-ring" onClick={e=>e.preventDefault()}
+                    <Link
+                      to="/request-access"
+                      className="au-focus-ring"
                       style={{ fontSize:13, color:t.gold, textDecoration:"none", fontWeight:500, borderBottom:`1px solid ${t.gold}44`, paddingBottom:1, fontFamily:"'DM Sans',sans-serif", transition:`all var(--motion-fast) var(--ease-luxury)` }}
                       onMouseEnter={e=>{e.currentTarget.style.color=t.goldLight;e.currentTarget.style.borderBottomColor=t.goldLight+"55";}}
                       onMouseLeave={e=>{e.currentTarget.style.color=t.gold;e.currentTarget.style.borderBottomColor=t.gold+"44";}}
-                    >Request an invitation</a>
+                    >Request an invitation</Link>
                   </div>
 
                   {/* Security badge */}
