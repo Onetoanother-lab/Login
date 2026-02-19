@@ -317,7 +317,7 @@ export default function RestaurantLogin() {
                   <div style={{ textAlign:"center", marginTop:24, ...D(700) }}>
                     <span style={{ fontSize:13, color:t.textMuted, fontFamily:"'DM Sans',sans-serif" }}>Not yet a member? </span>
                     <Link
-                      to="/request-access"
+                      to="/register"
                       className="au-focus-ring"
                       style={{ fontSize:13, color:t.gold, textDecoration:"none", fontWeight:500, borderBottom:`1px solid ${t.gold}44`, paddingBottom:1, fontFamily:"'DM Sans',sans-serif", transition:`all var(--motion-fast) var(--ease-luxury)` }}
                       onMouseEnter={e=>{e.currentTarget.style.color=t.goldLight;e.currentTarget.style.borderBottomColor=t.goldLight+"55";}}
