@@ -1,8 +1,7 @@
 // ─────────────────────────────────────────────────────────────
-// STATIC DATA CONSTANTS
+// STATIC DATA CONSTANTS — v5 (10-second optimized)
 // Used by: CinematicIntro, StarField, background layers, right panel
 // ─────────────────────────────────────────────────────────────
-
 
 // ─────────────────────────────────────────────────────────────
 // STAR DATA — 120 stars, fully deterministic
@@ -35,8 +34,9 @@ export const CONSTELLATION_LINES = STARS.slice(0, 90).reduce((acc, s, i) => {
 
 
 // ─────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────
-// CINEMATIC INTRO — v3 data (15 seconds, deterministic)
+// CINEMATIC INTRO — v5 data (10 seconds, deterministic)
+// Phase 1: 0–2s   | Phase 2: 2–4s | Phase 3: 4–6s
+// Phase 4: 6–8s   | Phase 5: 8–10s (exit)
 // ─────────────────────────────────────────────────────────────
 
 export const lcg = (seed, n) => {
@@ -78,17 +78,17 @@ export const DEBRIS = Array.from({ length: 50 }, (_, i) => {
 export const RAYS = Array.from({ length: 18 }, (_, i) => ({
   deg: `${(i / 18) * 360}deg`,
   op:  (0.035 + (i % 4) * 0.018).toFixed(3),
-  dl:  `${(2.2 + i * 0.07).toFixed(2)}s`,
+  dl:  `${(2.0 + i * 0.07).toFixed(2)}s`,
   h:   `${52 + (i % 3) * 8}vh`,
 }));
 
 export const M_RINGS = [
-  { r:340, sd:"",     rop:.15, sw:.65, dl:"0.25s", dur:"2.2s" },
-  { r:290, sd:"8 14", rop:.11, sw:.38, dl:"0.45s", dur:"2.0s" },
-  { r:235, sd:"",     rop:.20, sw:.60, dl:"0.65s", dur:"1.8s" },
-  { r:178, sd:"4 10", rop:.14, sw:.40, dl:"0.85s", dur:"1.5s" },
-  { r:128, sd:"",     rop:.26, sw:.55, dl:"1.05s", dur:"1.2s" },
-  { r: 80, sd:"2 6",  rop:.20, sw:.40, dl:"1.20s", dur:"1.0s" },
+  { r:340, sd:"",     rop:.15, sw:.65, dl:"0.20s", dur:"2.0s" },
+  { r:290, sd:"8 14", rop:.11, sw:.38, dl:"0.38s", dur:"1.8s" },
+  { r:235, sd:"",     rop:.20, sw:.60, dl:"0.55s", dur:"1.6s" },
+  { r:178, sd:"4 10", rop:.14, sw:.40, dl:"0.72s", dur:"1.4s" },
+  { r:128, sd:"",     rop:.26, sw:.55, dl:"0.88s", dur:"1.1s" },
+  { r: 80, sd:"2 6",  rop:.20, sw:.40, dl:"1.00s", dur:"0.9s" },
 ].map(r => ({ ...r, perim: Math.round(2 * Math.PI * r.r) }));
 
 export const M_TICKS = Array.from({ length: 128 }, (_, i) => {
@@ -98,7 +98,7 @@ export const M_TICKS = Array.from({ length: 128 }, (_, i) => {
   return {
     x1: 400 + Math.cos(a) * R, y1: 400 + Math.sin(a) * R,
     x2: 400 + Math.cos(a) * (R - len), y2: 400 + Math.sin(a) * (R - len),
-    dl: `${(0.25 + i * 0.005).toFixed(3)}s`,
+    dl: `${(0.20 + i * 0.004).toFixed(3)}s`,
     op: isMaj ? .32 : isMed ? .20 : isMin ? .12 : .07,
     sw: isMaj ? 1.4 : isMed ? .75 : isMin ? .45 : .28,
   };
@@ -110,7 +110,7 @@ export const M_SPOKES = Array.from({ length: 32 }, (_, i) => {
     x1: 400 + Math.cos(a) * 48,  y1: 400 + Math.sin(a) * 48,
     x2: 400 + Math.cos(a) * 340, y2: 400 + Math.sin(a) * 340,
     op: (major ? .28 : .12).toFixed(2), sw: major ? .55 : .28,
-    dl: `${(1.0 + i * 0.035).toFixed(3)}s`,
+    dl: `${(0.9 + i * 0.030).toFixed(3)}s`,
   };
 });
 
@@ -118,37 +118,42 @@ export const M_DIAMONDS = [0,30,60,90,120,150,180,210,240,270,300,330].map((deg,
   const a = deg * Math.PI / 180;
   const R = deg % 90 === 0 ? 340 : deg % 60 === 0 ? 290 : 235;
   const sz = deg % 90 === 0 ? 6 : deg % 60 === 0 ? 4 : 2.5;
-  return { cx: 400 + Math.cos(a) * R, cy: 400 + Math.sin(a) * R, sz, deg, dl: `${(1.3 + i * 0.07).toFixed(2)}s` };
+  return { cx: 400 + Math.cos(a) * R, cy: 400 + Math.sin(a) * R, sz, deg, dl: `${(1.1 + i * 0.06).toFixed(2)}s` };
 });
 
 export const HALOS = [
-  { delay:"1.6s", dur:"3.2s", color:"rgba(201,168,76,.22)" },
-  { delay:"2.6s", dur:"3.2s", color:"rgba(201,168,76,.14)" },
-  { delay:"3.8s", dur:"3.2s", color:"rgba(201,168,76,.08)" },
+  { delay:"1.4s", dur:"3.0s", color:"rgba(201,168,76,.22)" },
+  { delay:"2.2s", dur:"3.0s", color:"rgba(201,168,76,.14)" },
+  { delay:"3.2s", dur:"3.0s", color:"rgba(201,168,76,.08)" },
 ];
 
-export const LETTERS  = ["A","U","R","U","M"].map((ch, i) => ({ ch, dl: `${(3.0 + i * 0.12).toFixed(2)}s` }));
+// ── OPTIMIZED: Letters appear at 1.8s (Phase 2 starts at 2s)
+// Stagger 0.10s between each letter for crisp reveal
+export const LETTERS  = ["A","U","R","U","M"].map((ch, i) => ({ ch, dl: `${(1.80 + i * 0.10).toFixed(2)}s` }));
+
 export const STATS    = [{ num:"18+", label:"Years" }, { num:"3\u2605", label:"Michelin" }, { num:"40+", label:"Venues" }];
+
 export const ACCOLADES = [
   { icon:"\u2605", label:"James Beard Foundation",        sub:"Outstanding Restaurant \u00b7 2019 & 2022" },
   { icon:"\u25c6", label:"S.Pellegrino World\u2019s 50 Best", sub:"Ranked #12 Globally" },
   { icon:"\u25c9", label:"Wine Spectator Grand Award",     sub:"14 Consecutive Years" },
 ];
+
+// Timeline removed from 10s intro (was at 10.8s — unreachable)
 export const TIMELINE = [
   { year:"2014", event:"Founded" }, { year:"2016", event:"1st Star" },
   { year:"2018", event:"Top 50" }, { year:"2020", event:"3 Stars" }, { year:"2024", event:"40 Venues" },
 ];
 
 // ─────────────────────────────────────────────────────────────
-// CINEMATIC INTRO COMPONENT — v4 (15 seconds / 5 phases)
-// Phase 1 (0–3s)    Atmosphere    particles, parallax, logo emerging
-// Phase 2 (3–6s)    Brand Reveal  logo sharpens, typography stagger, sweep
-// Phase 3 (6–9s)    Prestige      animated counters, accent lines, flares
-// Phase 4 (9–12s)   Elevation     crescendo, depth zoom, particles intensify
-// Phase 5 (12–15s)  Transition    dissolve, darken, flash, exit
+// CINEMATIC INTRO COMPONENT — v5 (10 seconds / 5 phases)
+// Phase 1 (0–2s)    Atmosphere    particles, parallax, logo emerging
+// Phase 2 (2–4s)    Brand Reveal  logo sharpens, typography stagger, sweep
+// Phase 3 (4–6s)    Prestige      animated counters, accent lines, flares
+// Phase 4 (6–8s)    Elevation     crescendo, accolades, philosophy quote
+// Phase 5 (8–10s)   Transition    dissolve, darken, flash, exit
 // ─────────────────────────────────────────────────────────────
 
-/* ── Deterministic particle data ── */
 export const lcgN = (seed, n, lo=0, hi=1) => {
   let s = seed >>> 0;
   return Array.from({length:n}, () => { s = (1664525 * s + 1013904223) >>> 0; return lo + (s / 0xFFFFFFFF) * (hi - lo); });
@@ -185,16 +190,15 @@ export const BG_PARTICLES = Array.from({length:70}, (_,i) => {
   };
 });
 
-/* Micro-flare positions for phase 3 */
+// ── Micro-flare positions — timed for Phase 3 (fires at 4s)
 export const FLARES = [
-  {x:"22%",y:"38%",dl:"6.2s",sz:60,dur:.55},
-  {x:"78%",y:"55%",dl:"7.1s",sz:40,dur:.45},
-  {x:"50%",y:"28%",dl:"7.8s",sz:80,dur:.6},
-  {x:"34%",y:"72%",dl:"8.5s",sz:35,dur:.4},
-  {x:"64%",y:"18%",dl:"9.0s",sz:50,dur:.5},
+  {x:"22%",y:"38%",dl:"4.3s",sz:60,dur:.55},
+  {x:"78%",y:"55%",dl:"4.8s",sz:40,dur:.45},
+  {x:"50%",y:"28%",dl:"5.2s",sz:80,dur:.60},
+  {x:"34%",y:"72%",dl:"5.7s",sz:35,dur:.40},
+  {x:"64%",y:"18%",dl:"6.0s",sz:50,dur:.50},
 ];
 
-/** 10 bokeh spheres — dimmed opacity set on render */
 export const BOKEH = Array.from({ length: 10 }, (_, i) => {
   const s1 = (i * 1664525 + 1013904223) >>> 0;
   const s2 = (i * 2654435761)           >>> 0;
@@ -210,7 +214,6 @@ export const BOKEH = Array.from({ length: 10 }, (_, i) => {
   };
 });
 
-/** 20 ascending particles */
 export const PARTICLES = Array.from({ length: 20 }, (_, i) => {
   const s1 = (i * 1013904223) >>> 0;
   const s2 = (i * 6364136223) >>> 0;
@@ -229,7 +232,6 @@ export const PARTICLES = Array.from({ length: 20 }, (_, i) => {
   };
 });
 
-/** Wireframe geometry elements floating behind card */
 export const GEO_ELEMENTS = [
   { type:"diamond", x:8,  y:14, size:32, dur:18, del:0,  anim:"rp-geoFloat1" },
   { type:"diamond", x:88, y:22, size:20, dur:24, del:5,  anim:"rp-geoFloat2" },
@@ -240,7 +242,6 @@ export const GEO_ELEMENTS = [
   { type:"cross",   x:6,  y:40, size:12, dur:19, del:15, anim:"rp-geoFloat1" },
 ];
 
-/** Data stream vertical lines */
 export const DATA_STREAMS = Array.from({ length: 6 }, (_, i) => {
   const s = (i * 1664525 + 22695477) >>> 0;
   return {
@@ -251,7 +252,6 @@ export const DATA_STREAMS = Array.from({ length: 6 }, (_, i) => {
   };
 });
 
-/** 48 rising dust motes behind the login card */
 export const LP_DUST = Array.from({ length: 48 }, (_, i) => {
   const [rx, ry, rw, ro, rd, rdl, rvx, rvy, rvx2, rvy2] = lcg(i * 8191 + 4099, 10);
   return {
@@ -269,7 +269,6 @@ export const LP_DUST = Array.from({ length: 48 }, (_, i) => {
   };
 });
 
-/** 16 diagonal light streaks */
 export const LP_STREAKS = Array.from({ length: 16 }, (_, i) => {
   const [rx, rop, rdl, rdr] = lcg(i * 6271 + 2053, 4);
   return {

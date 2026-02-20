@@ -54,7 +54,7 @@ export default function Register() {
   // ── Depth transition engine ────────────────────────────────
   const {
     currentStep,
-    prevStep,
+    nextStep,
     direction,
     transitioning,
     goForward,
@@ -256,7 +256,7 @@ export default function Register() {
                     <DepthStageManager
                       steps={stepComponents}
                       currentStep={currentStep}
-                      prevStep={prevStep}
+                      nextStep={nextStep}
                       direction={direction}
                       transitioning={transitioning}
                     />
